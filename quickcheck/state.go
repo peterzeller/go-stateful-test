@@ -35,7 +35,7 @@ func (s *state) Logf(format string, args ...any) {
 	s.mut.Lock()
 	defer s.mut.Unlock()
 	// TODO implement like in real Log and add source code line to message?
-	_, _ = fmt.Fprintf(&s.log, format, args)
+	_, _ = fmt.Fprintf(&s.log, format, args...)
 }
 
 var _ statefulTest.T = &state{}
@@ -46,7 +46,7 @@ func (s *state) Errorf(format string, args ...interface{}) {
 	s.mut.Lock()
 	defer s.mut.Unlock()
 	s.failed = true
-	_, _ = fmt.Fprintf(&s.log, format, args)
+	_, _ = fmt.Fprintf(&s.log, format, args...)
 }
 
 var testFailedErr = fmt.Errorf("test failed")

@@ -3,10 +3,11 @@ package quickcheck
 import (
 	"context"
 	"fmt"
+	"log"
 	"runtime/debug"
 
 	"github.com/peterzeller/go-fun/iterable"
-	"github.com/peterzeller/go-fun/zero"
+	"github.com/peterzeller/go-fun/linkedlist"
 	"github.com/peterzeller/go-stateful-test/statefulTest"
 )
 
@@ -98,47 +99,72 @@ func shrinkIterator(tree *genNode) iterable.Iterator[*genNode] {
 		listShrinks := iterable.Fun[*genNode](func() (*genNode, bool) {
 			return nil, false
 		})
+		iterators = append(iterators, listShrinks)
 	}
 	// 2. shrink individual list elements
 	// 3. shrink individual children
 
-	return appendIterators(iterators...)
+	return iterable.ConcatIterators(iterators...)
 }
 
-func shrinkList() {
+func shrinkList[T any](list *linkedlist.LinkedList[T], shrinkFun func(t T) iterable.Iterable[T]) iterable.Iterable[*linkedlist.LinkedList[T]] {
+	listLen := list.Length()
+	toRemoveLengths := iterable.TakeWhile(
+		func(x int) bool {
+			return x > 0
+		}, iterable.Generate[int](
+			listLen,
+			func(x int) int {
+				return x / 2
+			}))
 
+	log.Printf("toRemoveLengths = %v", iterable.ToSlice(toRemoveLengths))
+
+	var partsRemoved iterable.Iterable[*linkedlist.LinkedList[T]] = iterable.FlatMap(
+		func(k int) iterable.Iterable[*linkedlist.LinkedList[T]] {
+			return removes(k, listLen, list)
+		})(toRemoveLengths)
+
+	shrinkOnes := listShrinkOne(list, shrinkFun)
+
+	return iterable.Concat[*linkedlist.LinkedList[T]](
+		partsRemoved,
+		shrinkOnes)
 }
 
-//shrinkList :: (a -> [a]) -> [a] -> [[a]]
-//shrinkList shr xs = concat [ removes k n xs | k <- takeWhile (>0) (iterate (`div`2) n) ]
-//++ shrinkOne xs
-//where
-//n = length xs
-//
-//shrinkOne []     = []
-//shrinkOne (x:xs) = [ x':xs | x'  <- shr x ]
-//++ [ x:xs' | xs' <- shrinkOne xs ]
-//
-//removes k n xs
-//| k > n     = []
-//| null xs2  = [[]]
-//| otherwise = xs2 : map (xs1 ++) (removes k (n-k) xs2)
-//where
-//xs1 = take k xs
-//xs2 = drop k xs
+func removes[T any](k int, n int, list *linkedlist.LinkedList[T]) iterable.Iterable[*linkedlist.LinkedList[T]] {
+	if k > n {
+		return iterable.Empty[*linkedlist.LinkedList[T]]()
+	}
+	xs1 := list.Limit(k)
+	xs2 := list.Skip(k)
+	if xs2 == nil {
+		return iterable.Singleton(linkedlist.New[T]())
+	}
+	return iterable.Concat(
+		iterable.Map(func(xs2r *linkedlist.LinkedList[T]) *linkedlist.LinkedList[T] {
+			return xs1.Append(xs2r)
+		})(removes(k, n-k, xs2)),
+		iterable.Singleton(xs2),
+	)
+}
 
-func appendIterators[T any](iterators ...iterable.Iterator[T]) iterable.Iterator[T] {
-	pos := 0
-	return iterable.Fun[T](func() (T, bool) {
-		for pos < len(iterators) {
-			n, ok := iterators[pos].Next()
-			if ok {
-				return n, true
-			}
-			pos++
-		}
-		return zero.Value[T](), false
-	})
+func listShrinkOne[T any](list *linkedlist.LinkedList[T], shrinkFun func(t T) iterable.Iterable[T]) iterable.Iterable[*linkedlist.LinkedList[T]] {
+	if list == nil {
+		return iterable.Empty[*linkedlist.LinkedList[T]]()
+	}
+
+	headShrinks := iterable.Map(func(h T) *linkedlist.LinkedList[T] {
+		return linkedlist.New(h).Append(list.Tail())
+	})(shrinkFun(list.Head()))
+
+	tailShrinks := iterable.Map(func(t *linkedlist.LinkedList[T]) *linkedlist.LinkedList[T] {
+		return linkedlist.New(list.Head()).Append(t)
+	})(listShrinkOne(list.Tail(), shrinkFun))
+
+	return iterable.Concat(
+		headShrinks,
+		tailShrinks)
 }
 
 func firstNotNil[X any](cfg Config, f func(iteration int) *X) *X {
