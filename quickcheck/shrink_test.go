@@ -1,23 +1,23 @@
 package quickcheck
 
 import (
+	"github.com/peterzeller/go-fun/linked"
 	"testing"
 
 	"github.com/peterzeller/go-fun/iterable"
-	"github.com/peterzeller/go-fun/linkedlist"
 	"github.com/stretchr/testify/require"
 )
 
 // toSlices you say?
 func toSlices[T any, I iterable.Iterable[T]](l iterable.Iterable[I]) [][]T {
 	return iterable.ToSlice(
-		iterable.Map(func(i I) []T {
+		iterable.Map(l, func(i I) []T {
 			return iterable.ToSlice[T](i)
-		})(l))
+		}))
 }
 
 func TestRemoves(t *testing.T) {
-	list := linkedlist.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	list := linked.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 	require.Equal(t, [][]int{
 		{1, 2, 3, 4, 5},
@@ -32,7 +32,7 @@ func TestRemoves(t *testing.T) {
 }
 
 func TestShrinkList(t *testing.T) {
-	list := linkedlist.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	list := linked.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 	shrinks := shrinkList(list, func(t int) iterable.Iterable[int] {
 		return iterable.Singleton(t / 2)

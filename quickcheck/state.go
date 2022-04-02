@@ -2,25 +2,21 @@ package quickcheck
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-fun/iterable"
+	"math/big"
 	"math/rand"
 	"strings"
-	"sync"
 
-	"github.com/peterzeller/go-fun/dict/hashdict"
-	"github.com/peterzeller/go-fun/hash"
-	"github.com/peterzeller/go-fun/linkedlist"
+	"github.com/peterzeller/go-fun/linked"
+	"github.com/peterzeller/go-stateful-test/generator"
+	"github.com/peterzeller/go-stateful-test/quickcheck/tree"
 	"github.com/peterzeller/go-stateful-test/statefulTest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type state struct {
-	// record the generated values in a tree-like structure, which we use for shrinking
-	genTree *mutableGenNode
-	// optional tree with preset values that is used for shrinking.
-	// If a value exists in the presetTree we take it from there.
-	// Otherwise, we generate a new one.
-	presetTree *genNode
+	mainFork *fork
 	// initialized to false and set to true when the test has failed
 	failed bool
 	// size is the total size of all generated values in the run
@@ -28,12 +24,145 @@ type state struct {
 	// buffer for log messages.
 	// As we only want to print the log for the last failed test run, we cannot write directly to standard out.
 	log strings.Builder
-	mut sync.Mutex
+}
+
+// fork of a state
+type fork struct {
+	parent *state
+	// record the generated values in a tree-like structure, which we use for shrinking
+	genTree *tree.MutableGenNode
+	// optional tree with preset values that is used for shrinking.
+	// If a value exists in the presetTree we take it from there.
+	// Otherwise, we generate a new one.
+	presetTree *tree.GenNode
+	// maxSize is the maximum size to generate when picking random values
+	maxSize int
+}
+
+func (f *fork) String() string {
+	return fmt.Sprintf("fork{genTree: %v, presetTree: %v}", f.genTree, f.presetTree)
+}
+
+type forkGenerator struct {
+	origin *fork
+	name   string
+}
+
+var _ generator.Generator[*fork] = &forkGenerator{}
+
+func (f forkGenerator) Name() string {
+	return f.name
+}
+
+func (f forkGenerator) Random(rnd generator.Rand, size int) *fork {
+	seed := rnd.R().Int63()
+	return &fork{
+		parent:     f.origin.parent,
+		genTree:    tree.NewGenNode(seed),
+		presetTree: nil,
+		maxSize:    size,
+	}
+}
+
+func (f forkGenerator) Size(elem *fork) *big.Int {
+	return elem.Size()
+}
+
+func (f forkGenerator) Enumerate(depth int) iterable.Iterable[*fork] {
+	panic("enumerate is not implemented for quickcheck")
+}
+
+func (f forkGenerator) Shrink(elem *fork) iterable.Iterable[*fork] {
+	shrinks := shrinkTree(elem.presetTree)
+	return iterable.Map(shrinks,
+		func(t *tree.GenNode) *fork {
+			return &fork{
+				parent:     f.origin.parent,
+				genTree:    tree.NewGenNode(0),
+				presetTree: t,
+				maxSize:    0,
+			}
+		})
+}
+
+func (f *fork) Fork(name string) generator.Rand {
+	gen := generator.ToUntyped[*fork](forkGenerator{name: name, origin: f})
+	child := f.PickValue(gen).(*fork)
+	return child
+}
+
+func (f *fork) R() *rand.Rand {
+	return f.genTree.Rand
+}
+
+func (f *fork) PickValue(gen generator.UntypedGenerator) interface{} {
+	// check if we have a preset value in the presetTree
+	genName := gen.Name()
+	var picked tree.GeneratedValue
+	foundPreset := false
+	if f.presetTree != nil {
+		generatedValues := f.presetTree.GeneratedValues()
+		v, newGVhead, ok := generatedValues.Head().FindAndRemove(func(gv tree.GeneratedValue) bool {
+			return gv.Generator.Name() == genName
+		})
+		if ok {
+			picked = v
+			f.presetTree = f.presetTree.With(linked.Cons(newGVhead, generatedValues.Tail()))
+			foundPreset = true
+		}
+	}
+	if !foundPreset {
+		// generate new random value
+		v := gen.Random(f, f.maxSize)
+		picked = tree.GeneratedValue{
+			Generator: gen,
+			Value:     v,
+		}
+	}
+	// store generated value
+	lastIndex := len(f.genTree.GeneratedValues) - 1
+	if lastIndex < 0 {
+		f.genTree.GeneratedValues = [][]tree.GeneratedValue{{}}
+		lastIndex = 0
+	}
+	f.genTree.GeneratedValues[lastIndex] = append(f.genTree.GeneratedValues[lastIndex], picked)
+	return picked.Value
+}
+
+func (f *fork) HasMore() bool {
+	result := false
+	if f.presetTree != nil {
+		// replay from presetTree
+		length := f.presetTree.GeneratedValues().Length()
+		if length > 1 {
+			result = length > 2
+			// move to next section
+			old := f.presetTree
+			f.presetTree = tree.New(old.GeneratedValues().Tail())
+		}
+	} else {
+		if f.genTree.Rand.Float64()*float64(f.maxSize) > 1 {
+			result = true
+		}
+	}
+	// record HasMore in genTree by appending a new section
+	f.genTree.GeneratedValues = append(f.genTree.GeneratedValues, []tree.GeneratedValue{})
+	return result
+}
+
+func (f *fork) Size() *big.Int {
+	return f.genTree.Size()
+}
+
+func (s *state) PickValue(gen generator.UntypedGenerator) interface{} {
+	return s.mainFork.PickValue(gen)
+}
+
+func (s *state) HasMore() bool {
+	return s.mainFork.HasMore()
 }
 
 func (s *state) Logf(format string, args ...any) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
 	// TODO implement like in real Log and add source code line to message?
 	_, _ = fmt.Fprintf(&s.log, format, args...)
 }
@@ -43,8 +172,6 @@ var _ assert.TestingT = &state{}
 var _ require.TestingT = &state{}
 
 func (s *state) Errorf(format string, args ...interface{}) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
 	s.failed = true
 	_, _ = fmt.Fprintf(&s.log, format, args...)
 }
@@ -52,70 +179,29 @@ func (s *state) Errorf(format string, args ...interface{}) {
 var testFailedErr = fmt.Errorf("test failed")
 
 func (s *state) FailNow() {
-	s.mut.Lock()
-	defer s.mut.Unlock()
 	s.failed = true
 	panic(testFailedErr)
 }
 
 func (s *state) Failed() bool {
-	s.mut.Lock()
-	defer s.mut.Unlock()
 	return s.failed
 }
 
 func (s *state) GetLog() string {
-	s.mut.Lock()
-	defer s.mut.Unlock()
 	return s.log.String()
 }
 
 func initState(seed int64) *state {
-	return &state{
-		genTree: newGenNode(seed),
-		failed:  false,
-		log:     strings.Builder{},
-		mut:     sync.Mutex{},
+	s := &state{
+		mainFork: &fork{
+			parent:     nil,
+			genTree:    tree.NewGenNode(seed),
+			presetTree: nil,
+			maxSize:    100, // TODO init differently
+		},
+		failed: false,
+		log:    strings.Builder{},
 	}
-}
-
-type mutableGenNode struct {
-	children  map[string]*mutableGenNode
-	generated map[string][]interface{}
-	rand      *rand.Rand
-	seed      int64
-	// hasMoreCount counts how often HasMore was called.
-	hasMoreCount int
-}
-
-func newGenNode(seed int64) *mutableGenNode {
-	return &mutableGenNode{
-		children:     map[string]*mutableGenNode{},
-		generated:    map[string][]interface{}{},
-		rand:         rand.New(rand.NewSource(seed)),
-		seed:         seed,
-		hasMoreCount: 0,
-	}
-}
-
-func (m *mutableGenNode) toImmutable() *genNode {
-	cs := hashdict.New[string, *genNode](hash.String())
-	for k, v := range m.children {
-		cs = cs.Set(k, v.toImmutable())
-	}
-	generated := hashdict.New[string, *linkedlist.LinkedList[interface{}]](hash.String())
-	for k, v := range m.generated {
-		generated = generated.Set(k, linkedlist.New(v...))
-	}
-	return &genNode{
-		children:     cs,
-		generated:    generated,
-		hasMoreCount: m.hasMoreCount,
-	}
-}
-
-type genNode struct {
-	children     hashdict.Dict[string, *genNode]
-	generated    hashdict.Dict[string, *linkedlist.LinkedList[interface{}]]
-	hasMoreCount int
+	s.mainFork.parent = s
+	return s
 }
