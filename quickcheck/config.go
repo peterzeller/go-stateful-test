@@ -8,6 +8,7 @@ import (
 type Config struct {
 	NumberOfRuns      int
 	MaxShrinkDuration time.Duration
+	PrintAllLogs      bool
 }
 
 type TestingT interface {

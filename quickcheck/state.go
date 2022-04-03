@@ -165,6 +165,7 @@ func (s *state) HasMore() bool {
 func (s *state) Logf(format string, args ...any) {
 	// TODO implement like in real Log and add source code line to message?
 	_, _ = fmt.Fprintf(&s.log, format, args...)
+	s.log.WriteRune('\n')
 }
 
 var _ statefulTest.T = &state{}

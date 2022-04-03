@@ -14,10 +14,10 @@ func expectError(t *testing.T, f func(testingT quickcheck.TestingT)) {
 		r := recover()
 		if r != nil {
 			if err, ok := r.(error); ok {
-				testingT.Logf("%v", err)
-				return
+				testingT.Logf("Error: %v", err)
+			} else {
+				panic(r)
 			}
-			panic(r)
 		}
 		if testingT.Failed() {
 			t.Logf("error as expected:\n%s", testingT.log.String())

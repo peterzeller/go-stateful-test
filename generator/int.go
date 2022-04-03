@@ -64,15 +64,18 @@ func (g genInt) Random(rnd Rand, size int) int {
 }
 
 func (g genInt) Enumerate(depth int) iterable.Iterable[int] {
-	return iterable.Take(depth,
-		iterable.FlatMap(
-			iterable.Generate(0, func(i int) int { return i + 1 }),
-			func(a int) iterable.Iterable[int] {
-				if a == 0 {
-					return iterable.Singleton(0)
-				}
-				return iterable.New(a, -a)
-			}))
+	if g.min == math.MinInt && g.max == math.MaxInt {
+		return iterable.Take(depth,
+			iterable.FlatMap(
+				iterable.Generate(0, func(i int) int { return i + 1 }),
+				func(a int) iterable.Iterable[int] {
+					if a == 0 {
+						return iterable.Singleton(0)
+					}
+					return iterable.New(a, -a)
+				}))
+	}
+	return iterable.Take(depth, iterable.Range(g.min, g.max))
 }
 
 func (g genInt) Shrink(elem int) iterable.Iterable[int] {

@@ -16,7 +16,15 @@ import (
 func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 	cfg = setDefaults(cfg)
 
+	count := 0
 	runState := func(s *state) (result *state) {
+		count++
+		defer func() {
+			if cfg.PrintAllLogs {
+				t.Logf("Test run %d (failed = %v):\n%s", count, s.failed, s.GetLog())
+			}
+		}()
+
 		defer func() {
 			// handle panics
 			r := recover()
