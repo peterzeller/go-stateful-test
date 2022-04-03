@@ -53,7 +53,7 @@ func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 	// start shrinking:
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.MaxShrinkDuration)
 	defer cancel()
-	shrunkS := shrink(ctx, s, runState)
+	shrunkS := shrinkState(ctx, s, runState)
 
 	if shrunkS.failed {
 		t.Logf("Shrunk Test Run:\n%s", shrunkS.GetLog())

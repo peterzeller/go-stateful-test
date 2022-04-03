@@ -1,4 +1,4 @@
-package quickcheck
+package shrink
 
 import (
 	"github.com/peterzeller/go-fun/linked"
@@ -21,20 +21,20 @@ func TestRemoves(t *testing.T) {
 
 	require.Equal(t, [][]int{
 		{1, 2, 3, 4, 5},
-		{6, 7, 8, 9, 10}}, toSlices[int](removes(5, 10, list)))
+		{6, 7, 8, 9, 10}}, toSlices[int](Removes(5, 10, list)))
 
 	require.Equal(t, [][]int{
 		{1, 2, 3, 4, 5, 6, 7, 8},
 		{1, 2, 3, 4, 5, 6, 9, 10},
 		{1, 2, 3, 4, 7, 8, 9, 10},
 		{1, 2, 5, 6, 7, 8, 9, 10},
-		{3, 4, 5, 6, 7, 8, 9, 10}}, toSlices[int](removes(2, 10, list)))
+		{3, 4, 5, 6, 7, 8, 9, 10}}, toSlices[int](Removes(2, 10, list)))
 }
 
 func TestShrinkList(t *testing.T) {
 	list := linked.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
-	shrinks := shrinkList(list, func(t int) iterable.Iterable[int] {
+	shrinks := ShrinkList(list, func(t int) iterable.Iterable[int] {
 		return iterable.Singleton(t / 2)
 	})
 

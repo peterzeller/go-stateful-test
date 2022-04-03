@@ -3,7 +3,7 @@ module github.com/peterzeller/go-stateful-test
 go 1.18
 
 require (
-	github.com/peterzeller/go-fun v0.0.0-20220402182456-1375b730720f
+	github.com/peterzeller/go-fun v0.0.0-20220403180724-4ae76dc8dca9
 	github.com/stretchr/testify v1.7.0
 )
 

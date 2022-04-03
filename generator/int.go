@@ -8,31 +8,29 @@ import (
 )
 
 func Int() Generator[int] {
-	return GenInt{
+	return genInt{
 		min: math.MinInt,
 		max: math.MaxInt,
 	}
 }
 
 func IntRange(min int, max int) Generator[int] {
-	return GenInt{
+	return genInt{
 		min: min,
 		max: max,
 	}
 }
 
-var _ Generator[int] = GenInt{}
-
-type GenInt struct {
+type genInt struct {
 	min int
 	max int
 }
 
-func (g GenInt) Name() string {
-	return "GenInt"
+func (g genInt) Name() string {
+	return "genInt"
 }
 
-func (g GenInt) Random(rnd Rand, size int) int {
+func (g genInt) Random(rnd Rand, size int) int {
 	r := rnd.R()
 	p := r.Float64()
 	n := 1 + g.max - g.min
@@ -58,7 +56,7 @@ func (g GenInt) Random(rnd Rand, size int) int {
 	}
 }
 
-func (g GenInt) Enumerate(depth int) iterable.Iterable[int] {
+func (g genInt) Enumerate(depth int) iterable.Iterable[int] {
 	return iterable.Take(depth,
 		iterable.FlatMap(
 			iterable.Generate(0, func(i int) int { return i + 1 }),
@@ -66,11 +64,11 @@ func (g GenInt) Enumerate(depth int) iterable.Iterable[int] {
 				if a == 0 {
 					return iterable.Singleton(0)
 				}
-				return iterable.FromSlice([]int{a, -a})
+				return iterable.New(a, -a)
 			}))
 }
 
-func (g GenInt) Shrink(elem int) iterable.Iterable[int] {
+func (g genInt) Shrink(elem int) iterable.Iterable[int] {
 	if elem == 0 {
 		return iterable.Empty[int]()
 	}
@@ -81,7 +79,7 @@ func (g GenInt) Shrink(elem int) iterable.Iterable[int] {
 	}
 }
 
-func (g GenInt) Size(elem int) *big.Int {
+func (g genInt) Size(elem int) *big.Int {
 	if elem < 0 {
 		return big.NewInt(int64(1 - elem))
 	}
