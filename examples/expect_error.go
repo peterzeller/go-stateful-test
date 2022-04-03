@@ -14,12 +14,14 @@ func expectError(t *testing.T, f func(testingT quickcheck.TestingT)) {
 		r := recover()
 		if r != nil {
 			if err, ok := r.(error); ok {
-				t.Logf("error as expected: %v\n%s", err, testingT.log.String())
+				testingT.Logf("%v", err)
 				return
 			}
 			panic(r)
 		}
-		if !testingT.Failed() {
+		if testingT.Failed() {
+			t.Logf("error as expected:\n%s", testingT.log.String())
+		} else {
 			t.Logf("Expected quickcheck to find an error, but no error found")
 			t.Fail()
 		}

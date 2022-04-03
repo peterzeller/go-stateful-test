@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"unicode/utf8"
 
@@ -42,6 +43,21 @@ func TestStrings(t *testing.T) {
 			s := pick.Val(t, generator.String())
 			t.Logf("x = %s", s)
 			require.True(t, utf8.RuneCountInString(s) < 10)
+		})
+	})
+}
+
+func TestMax3Quick(t *testing.T) {
+	expectError(t, func(t quickcheck.TestingT) {
+		quickcheck.Run(t, quickcheck.Config{}, func(t statefulTest.T) {
+			x := pick.Val(t, generator.Int())
+			y := pick.Val(t, generator.Int())
+			z := pick.Val(t, generator.Int())
+			res := max3(x, y, z)
+			t.Logf("min3(%d, %d, %d) = %d", x, y, z, res)
+			assert.True(t, res >= x, "res >= x")
+			assert.True(t, res >= y, "res >= y")
+			assert.True(t, res >= z, "res >= z")
 		})
 	})
 }

@@ -43,6 +43,13 @@ func (g genInt) Random(rnd Rand, size int) int {
 		return g.min
 	case p < 0.15:
 		return g.max
+	case p < 0.8 && g.min <= 0 && 0 < g.max:
+		// normal distribution around 0
+		res := int(math.Abs(r.NormFloat64()) * 3)
+		if res > g.max {
+			res = g.max
+		}
+		return res
 	default:
 		if n > 0 {
 			// uniform distribution
