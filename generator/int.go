@@ -91,7 +91,10 @@ func (g genInt) Shrink(elem int) iterable.Iterable[int] {
 
 func (g genInt) Size(elem int) *big.Int {
 	if elem < 0 {
-		return big.NewInt(int64(1 - elem))
+		r := big.NewInt(int64(elem))
+		r.Abs(r)
+		r.Add(r, big.NewInt(1))
+		return r
 	}
 	return big.NewInt(int64(elem))
 }

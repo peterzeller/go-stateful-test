@@ -7,11 +7,12 @@ import (
 	"testing"
 )
 
-func expectError(t *testing.T, f func(testingT quickcheck.TestingT)) {
+func expectError(t *testing.T, f func(testingT quickcheck.TestingT)) (log string) {
 	testingT := &logT{}
 
 	defer func() {
 		r := recover()
+		log = testingT.log.String()
 		if r != nil {
 			if err, ok := r.(error); ok {
 				testingT.Logf("Error: %v", err)
@@ -27,6 +28,7 @@ func expectError(t *testing.T, f func(testingT quickcheck.TestingT)) {
 		}
 	}()
 	f(testingT)
+	return
 }
 
 type logT struct {

@@ -134,8 +134,8 @@ func (f *fork) HasMore() bool {
 	if f.presetTree != nil {
 		// replay from presetTree
 		length := f.presetTree.GeneratedValues().Length()
-		if length > 1 {
-			result = length > 2
+		if length > 0 {
+			result = length > 1
 			// move to next section
 			old := f.presetTree
 			f.presetTree = tree.New(old.GeneratedValues().Tail())
@@ -146,7 +146,9 @@ func (f *fork) HasMore() bool {
 		}
 	}
 	// record HasMore in genTree by appending a new section
-	f.genTree.GeneratedValues = append(f.genTree.GeneratedValues, []tree.GeneratedValue{})
+	if result {
+		f.genTree.GeneratedValues = append(f.genTree.GeneratedValues, []tree.GeneratedValue{})
+	}
 	return result
 }
 

@@ -61,3 +61,19 @@ func TestMax3Quick(t *testing.T) {
 		})
 	})
 }
+
+func TestHasMore(t *testing.T) {
+	out := expectError(t, func(t quickcheck.TestingT) {
+		quickcheck.Run(t, quickcheck.Config{}, func(t statefulTest.T) {
+			var l []int
+			for t.HasMore() {
+				x := pick.Val(t, generator.Int())
+				y := pick.Val(t, generator.Int())
+				l = append(l, x, y)
+				t.Logf("l = %v", l)
+				require.True(t, len(l) <= 4)
+			}
+		})
+	})
+	require.Contains(t, out, "l = [0 0 0 0 0 0]")
+}
