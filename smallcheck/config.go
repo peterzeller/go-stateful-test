@@ -1,7 +1,8 @@
 package smallcheck
 
 type Config struct {
-	Depth int
+	Depth        int
+	PrintAllLogs bool
 }
 
 func setDefaults(cfg Config) Config {

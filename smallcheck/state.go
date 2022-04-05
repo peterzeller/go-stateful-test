@@ -13,6 +13,7 @@ type rState struct {
 	continueAtDepth int
 	maxDepth        int
 	done            bool
+	cfg             Config
 }
 
 func (rs *rState) exploreStates(runState func(s *state)) *state {
@@ -39,6 +40,9 @@ func (rs *rState) exploreStates(runState func(s *state)) *state {
 
 			runState(s)
 		}()
+		if rs.cfg.PrintAllLogs {
+			fmt.Printf("\n%s---\n", s.GetLog())
+		}
 		if s.failed {
 			// found a failed testcase
 			return s
@@ -83,6 +87,7 @@ type state struct {
 func (s *state) Errorf(format string, args ...interface{}) {
 	s.failed = true
 	_, _ = fmt.Fprintf(&s.log, format, args...)
+	s.log.WriteRune('\n')
 }
 
 func (s *state) FailNow() {
@@ -97,6 +102,7 @@ func (s *state) Failed() bool {
 func (s *state) Logf(format string, args ...any) {
 	// TODO implement like in real Log and add source code line to message?
 	_, _ = fmt.Fprintf(&s.log, format, args...)
+	s.log.WriteRune('\n')
 }
 
 func (s *state) GetLog() string {

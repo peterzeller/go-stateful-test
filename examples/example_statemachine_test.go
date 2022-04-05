@@ -4,6 +4,7 @@ import (
 	"github.com/peterzeller/go-stateful-test/generator"
 	"github.com/peterzeller/go-stateful-test/pick"
 	"github.com/peterzeller/go-stateful-test/quickcheck"
+	"github.com/peterzeller/go-stateful-test/smallcheck"
 	"github.com/peterzeller/go-stateful-test/statefulTest"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -84,6 +85,8 @@ func TestQueueWithQuickCheck(t *testing.T) {
 	})
 }
 
-//func TestQueueWithSmallCheck(t *testing.T) {
-//	smallcheck.Run(t, smallcheck.Config{}, QueueProperty)
-//}
+func TestQueueWithSmallCheck(t *testing.T) {
+	expectError(t, func(t quickcheck.TestingT) {
+		smallcheck.Run(t, smallcheck.Config{}, QueueProperty)
+	})
+}

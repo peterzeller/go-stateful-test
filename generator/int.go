@@ -75,7 +75,7 @@ func (g genInt) Enumerate(depth int) iterable.Iterable[int] {
 					return iterable.New(a, -a)
 				}))
 	}
-	return iterable.Take(depth, iterable.Range(g.min, g.max))
+	return iterable.Take(depth, iterable.RangeI(g.min, g.max))
 }
 
 func (g genInt) Shrink(elem int) iterable.Iterable[int] {

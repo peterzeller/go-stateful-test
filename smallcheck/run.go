@@ -41,11 +41,13 @@ func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 			stack:           nil,
 			continueAtDepth: 0,
 			maxDepth:        depth,
+			done:            false,
+			cfg:             cfg,
 		}
 
 		s := rs.exploreStates(runState)
 		if s != nil && s.failed {
-			t.Errorf("Test failed:\n%s", s.GetLog())
+			t.Errorf("Test failed at depth %d:\n%s", depth, s.GetLog())
 			return
 		}
 	}
