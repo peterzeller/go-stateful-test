@@ -2,10 +2,11 @@ package quickcheck
 
 import (
 	"fmt"
-	"github.com/peterzeller/go-fun/iterable"
 	"math/big"
 	"math/rand"
 	"strings"
+
+	"github.com/peterzeller/go-fun/iterable"
 
 	"github.com/peterzeller/go-fun/linked"
 	"github.com/peterzeller/go-stateful-test/generator"
@@ -54,35 +55,39 @@ func (f forkGenerator) Name() string {
 	return f.name
 }
 
-func (f forkGenerator) Random(rnd generator.Rand, size int) *fork {
+func (f forkGenerator) Random(rnd generator.Rand, size int) generator.RandomValue[*fork] {
 	seed := rnd.R().Int63()
-	return &fork{
+	return generator.R(&fork{
 		parent:     f.origin.parent,
 		genTree:    tree.NewGenNode(seed),
 		presetTree: nil,
 		maxSize:    size,
-	}
+	})
 }
 
-func (f forkGenerator) Size(elem *fork) *big.Int {
-	return elem.Size()
+func (f forkGenerator) Size(elem generator.RandomValue[*fork]) *big.Int {
+	return elem.Get().Size()
 }
 
 func (f forkGenerator) Enumerate(depth int) iterable.Iterable[*fork] {
 	panic("enumerate is not implemented for quickcheck")
 }
 
-func (f forkGenerator) Shrink(elem *fork) iterable.Iterable[*fork] {
-	shrinks := shrinkTree(elem.presetTree)
+func (f forkGenerator) Shrink(elem generator.RandomValue[*fork]) iterable.Iterable[generator.RandomValue[*fork]] {
+	shrinks := shrinkTree(elem.Get().presetTree)
 	return iterable.Map(shrinks,
-		func(t *tree.GenNode) *fork {
-			return &fork{
+		func(t *tree.GenNode) generator.RandomValue[*fork] {
+			return generator.R(&fork{
 				parent:     f.origin.parent,
 				genTree:    tree.NewGenNode(0),
 				presetTree: t,
 				maxSize:    0,
-			}
+			})
 		})
+}
+
+func (f forkGenerator) RValue(rv generator.RandomValue[*fork]) (*fork, bool) {
+	return rv.Get(), true
 }
 
 func (f *fork) Fork(name string) generator.Rand {
@@ -126,7 +131,11 @@ func (f *fork) PickValue(gen generator.UntypedGenerator) interface{} {
 		lastIndex = 0
 	}
 	f.genTree.GeneratedValues[lastIndex] = append(f.genTree.GeneratedValues[lastIndex], picked)
-	return picked.Value
+	repaired, ok := gen.RValue(picked.Value)
+	if !ok {
+		panic(fmt.Errorf("quickcheck: could not convert generated value %v to generator %v", picked.Value, gen.Name()))
+	}
+	return repaired
 }
 
 func (f *fork) HasMore() bool {

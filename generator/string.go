@@ -27,14 +27,14 @@ func (g genString) Name() string {
 	return "genString"
 }
 
-func (g genString) Random(rnd Rand, size int) string {
+func (g genString) Random(rnd Rand, size int) RandomValue[string] {
 	r := rnd.R()
 	length := r.Intn(size + 1)
 	var s strings.Builder
 	for i := 0; i < length; i++ {
 		s.WriteRune(g.chars[r.Intn(len(g.chars))])
 	}
-	return s.String()
+	return R(s.String())
 }
 
 func (g genString) Enumerate(depth int) iterable.Iterable[string] {
@@ -63,15 +63,15 @@ func enumerateStrings(length int, chars []rune) iterable.Iterable[string] {
 	}
 }
 
-func (g genString) Shrink(elem string) iterable.Iterable[string] {
-	runes := linked.FromIterable(iterable.FromString(elem))
+func (g genString) Shrink(elem RandomValue[string]) iterable.Iterable[RandomValue[string]] {
+	runes := linked.FromIterable(iterable.FromString(elem.Get()))
 	return iterable.Map(shrink.ShrinkList(runes, g.shrinkRune),
-		func(runes *linked.List[rune]) string {
+		func(runes *linked.List[rune]) RandomValue[string] {
 			var s strings.Builder
 			for it := iterable.Start[rune](runes); it.HasNext(); it.Next() {
 				s.WriteRune(it.Current())
 			}
-			return s.String()
+			return R(s.String())
 		})
 }
 
@@ -90,9 +90,9 @@ func (g genString) shrinkRune(r rune) iterable.Iterable[rune] {
 
 }
 
-func (g genString) Size(t string) *big.Int {
+func (g genString) Size(t RandomValue[string]) *big.Int {
 	var sum big.Int
-	for _, r := range t {
+	for _, r := range t.Get() {
 		index := slice.IndexOf(r, g.chars, equality.Default[rune]())
 		if index < 0 {
 			index = len(g.chars)
@@ -100,4 +100,8 @@ func (g genString) Size(t string) *big.Int {
 		sum.Add(&sum, big.NewInt(int64(index)))
 	}
 	return &sum
+}
+
+func (g genString) RValue(elem RandomValue[string]) (string, bool) {
+	return elem.Get(), true
 }

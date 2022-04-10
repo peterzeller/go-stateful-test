@@ -1,19 +1,20 @@
 package generator
 
 import (
+	"testing"
+
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGenString_Size(t *testing.T) {
 	s := String('a', 'b', 'c')
-	require.Equal(t, int64(3), s.Size("abc").Int64())
+	require.Equal(t, int64(3), s.Size(R("abc")).Int64())
 }
 
 func TestGenString_Shrink(t *testing.T) {
 	s := String('a', 'b', 'c')
-	require.Equal(t, []string{"", "cb", "ca", "ba", "bba", "caa"}, iterable.ToSlice(s.Shrink("cba")))
+	require.Equal(t, []string{"", "cb", "ca", "ba", "bba", "caa"}, iterable.ToSlice(ShrinkValues(s, "cba")))
 }
 
 func TestGenString_Enumerate(t *testing.T) {

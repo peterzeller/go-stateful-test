@@ -30,36 +30,36 @@ func (g genInt) Name() string {
 	return "genInt"
 }
 
-func (g genInt) Random(rnd Rand, size int) int {
+func (g genInt) Random(rnd Rand, size int) RandomValue[int] {
 	r := rnd.R()
 	p := r.Float64()
 	n := 1 + g.max - g.min
 	switch {
 	// higher probability for 0
 	case p < 0.05 && g.min < 0 && g.max < 0:
-		return 0
+		return R(0)
 	// higher probability for error cases
 	case p < 0.1:
-		return g.min
+		return R(g.min)
 	case p < 0.15:
-		return g.max
+		return R(g.max)
 	case p < 0.8 && g.min <= 0 && 0 < g.max:
 		// normal distribution around 0
 		res := int(math.Abs(r.NormFloat64()) * 3)
 		if res > g.max {
 			res = g.max
 		}
-		return res
+		return R(res)
 	default:
 		if n > 0 {
 			// uniform distribution
-			return g.min + r.Intn(n)
+			return R(g.min + r.Intn(n))
 		}
 		if r.Float64() < 0.1 {
 			// negative number
-			return -1 + r.Intn(-1+g.min)
+			return R(-1 + r.Intn(-1+g.min))
 		}
-		return 1 + r.Intn(g.max)
+		return R(1 + r.Intn(g.max))
 	}
 }
 
@@ -78,18 +78,34 @@ func (g genInt) Enumerate(depth int) iterable.Iterable[int] {
 	return iterable.Take(depth, iterable.RangeI(g.min, g.max))
 }
 
-func (g genInt) Shrink(elem int) iterable.Iterable[int] {
+func (g genInt) Shrink(r RandomValue[int]) iterable.Iterable[RandomValue[int]] {
+	elem := r.Get()
 	if elem == 0 {
-		return iterable.Empty[int]()
+		return iterable.Empty[RandomValue[int]]()
 	}
 	if elem < 0 {
-		return iterable.New(elem/2, -elem, elem+1)
+		return iterable.Map(iterable.New(elem/2, -elem, elem+1), R[int])
 	} else {
-		return iterable.New(elem/2, elem-1)
+		return iterable.Map(iterable.New(elem/2, elem-1), R[int])
 	}
 }
 
-func (g genInt) Size(elem int) *big.Int {
+func (g genInt) RValue(r RandomValue[int]) (int, bool) {
+	if g.min > g.max {
+		return 0, false
+	}
+	elem := r.Get()
+	if elem < g.min {
+		return g.min, true
+	}
+	if elem > g.max {
+		return g.max, true
+	}
+	return elem, true
+}
+
+func (g genInt) Size(r RandomValue[int]) *big.Int {
+	elem := r.Get()
 	if elem < 0 {
 		r := big.NewInt(int64(elem))
 		r.Abs(r)

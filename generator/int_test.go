@@ -1,9 +1,10 @@
 package generator
 
 import (
+	"testing"
+
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGenInt_Enumerate(t *testing.T) {
