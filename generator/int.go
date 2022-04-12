@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"log"
 	"math"
 	"math/big"
 
@@ -65,7 +64,6 @@ func (g genInt) Random(rnd Rand, size int) RandomValue[int] {
 }
 
 func (g genInt) Enumerate(depth int) iterable.Iterable[int] {
-	log.Printf("genInt.Enumerate(%d)", depth)
 	if g.min == math.MinInt && g.max == math.MaxInt {
 		return iterable.Take(depth,
 			iterable.FlatMap(

@@ -1,13 +1,14 @@
 package examples
 
 import (
+	"testing"
+
 	"github.com/peterzeller/go-stateful-test/generator"
 	"github.com/peterzeller/go-stateful-test/pick"
 	"github.com/peterzeller/go-stateful-test/quickcheck"
 	"github.com/peterzeller/go-stateful-test/smallcheck"
 	"github.com/peterzeller/go-stateful-test/statefulTest"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 // Queue implements integer queue with a fixed maximum size.
@@ -51,29 +52,30 @@ func QueueProperty(t statefulTest.T) {
 
 	// repeat commands
 	for t.HasMore() {
-		// TODO add one-of generator to make this nicer
-		switch pick.Val(t, generator.IntRange(0, 1)) {
-		case 0:
-			// Test q.Get:
-			if q.Size() == 0 {
-				// skip if queue is empty
-				continue
-			}
-			i := q.Get()
-			t.Logf("Calling q.Get() -> %d", i)
-			require.Equal(t, model[0], i, "result of q.Get()")
-			model = model[1:]
-		case 1:
-			// Test q.Put
-			if q.Size() >= n {
-				// skip if queue is full
-				continue
-			}
-			i := pick.Val(t, generator.Int())
-			t.Logf("Calling q.Put(%d)", i)
-			q.Put(i)
-			model = append(model, i)
-		}
+		pick.Switch(t, pick.Cases{
+			"get": func() {
+				// Test q.Get:
+				if q.Size() == 0 {
+					// skip if queue is empty
+					return
+				}
+				i := q.Get()
+				t.Logf("Calling q.Get() -> %d", i)
+				require.Equal(t, model[0], i, "result of q.Get()")
+				model = model[1:]
+			},
+			"put": func() {
+				// Test q.Put
+				if q.Size() >= n {
+					// skip if queue is full
+					return
+				}
+				i := pick.Val(t, generator.Int())
+				t.Logf("Calling q.Put(%d)", i)
+				q.Put(i)
+				model = append(model, i)
+			},
+		})
 		// check invariant
 		require.Equal(t, len(model), q.Size(), "invariant: queue size")
 	}
