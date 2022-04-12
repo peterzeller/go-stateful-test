@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/peterzeller/go-fun/equality"
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/linked"
+	"github.com/peterzeller/go-fun/slice"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
 )
 
+// Slice is a generator for slices.
 func Slice[T any](elemGen Generator[T]) Generator[[]T] {
 	return &sliceGen[T]{
 		elemGen: elemGen,
@@ -92,6 +95,111 @@ func (s *sliceGen[T]) Shrink(elem RandomValue[[]T]) iterable.Iterable[RandomValu
 }
 
 func (s *sliceGen[T]) Size(t RandomValue[[]T]) *big.Int {
+	var size big.Int
+	rvs := t.Value.([]RandomValue[T])
+	for _, rv := range rvs {
+		size.Add(&size, s.elemGen.Size(rv))
+	}
+	return &size
+}
+
+// SliceDistinct generates slices with distinct elements.
+func SliceDistinct[T any](elemGen Generator[T], eq equality.Equality[T]) Generator[[]T] {
+	return &sliceDistinctGen[T]{
+		elemGen: elemGen,
+		eq:      eq,
+	}
+}
+
+type sliceDistinctGen[T any] struct {
+	elemGen Generator[T]
+	eq      equality.Equality[T]
+}
+
+func (s *sliceDistinctGen[T]) Enumerate(depth int) iterable.Iterable[[]T] {
+	return EnumerateSlicesDistinct(depth, depth, s.elemGen, s.eq)
+}
+
+func EnumerateSlicesDistinct[T any](length, depth int, elemGen Generator[T], eq equality.Equality[T]) iterable.Iterable[[]T] {
+	if length <= 0 {
+		return iterable.Singleton([]T{})
+	}
+	smallerSlices := EnumerateSlices(length-1, depth, elemGen)
+	return iterable.Concat(
+		smallerSlices,
+		iterable.FlatMap(
+			smallerSlices,
+			func(tail []T) iterable.Iterable[[]T] {
+				// append only to the longest lists
+				if len(tail) < length-1 {
+					return iterable.Empty[[]T]()
+				}
+				return iterable.FlatMap(
+					elemGen.Enumerate(depth),
+					func(head T) iterable.Iterable[[]T] {
+						if slice.ContainsEq(tail, head, eq) {
+							// skip if already in the list
+							// (we could inverse the logic here to make this more efficient)
+							return iterable.Empty[[]T]()
+						}
+						return iterable.Singleton(append([]T{head}, tail...))
+					})
+			},
+		),
+	)
+}
+
+func (s *sliceDistinctGen[T]) Name() string {
+	return fmt.Sprintf("SliceDistinct(%s)", s.elemGen.Name())
+}
+
+func (s *sliceDistinctGen[T]) RValue(elem RandomValue[[]T]) ([]T, bool) {
+	rvs, ok := elem.Value.([]RandomValue[T])
+	if !ok {
+		return nil, false
+	}
+	res := make([]T, len(rvs))
+	for i, rv := range rvs {
+		res[i], ok = s.elemGen.RValue(rv)
+		if !ok {
+			return nil, false
+		}
+	}
+	return res, true
+}
+
+func (s *sliceDistinctGen[T]) Random(rnd Rand, size int) RandomValue[[]T] {
+	if size <= 0 {
+		return RandomValue[[]T]{Value: []RandomValue[T]{}}
+	}
+	l := rnd.R().Intn(size)
+	res := make([]RandomValue[T], 0, l)
+	resValues := make([]T, 0, l)
+	for i := 0; i < l; i++ {
+		vr := s.elemGen.Random(rnd, size-1)
+		v, ok := s.elemGen.RValue(vr)
+		if ok && !slice.ContainsEq(resValues, v, s.eq) {
+			res = append(res, vr)
+			resValues = append(resValues, v)
+		}
+	}
+	return RandomValue[[]T]{Value: res}
+}
+
+func (s *sliceDistinctGen[T]) Shrink(elem RandomValue[[]T]) iterable.Iterable[RandomValue[[]T]] {
+	rvs := elem.Value.([]RandomValue[T])
+	return iterable.Map(
+		shrink.ShrinkList(
+			linked.New(rvs...),
+			func(rv RandomValue[T]) iterable.Iterable[RandomValue[T]] {
+				return s.elemGen.Shrink(rv)
+			}),
+		func(l *linked.List[RandomValue[T]]) RandomValue[[]T] {
+			return RandomValue[[]T]{Value: l.ToSlice()}
+		})
+}
+
+func (s *sliceDistinctGen[T]) Size(t RandomValue[[]T]) *big.Int {
 	var size big.Int
 	rvs := t.Value.([]RandomValue[T])
 	for _, rv := range rvs {
