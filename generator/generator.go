@@ -1,3 +1,13 @@
+// The generator package defines the interface for generators, as well as generators for common Go types and
+// combinators that simplify writing new generators.
+//
+// Defining a generator
+//
+// To define a new generator, you need to implement the Generator interface.
+// This can be done by implementing a new type and with the required methods or
+// directly inline by creating a AnonGenerator instance.
+//
+// It is also possible to create
 package generator
 
 import (

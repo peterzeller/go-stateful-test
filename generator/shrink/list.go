@@ -29,7 +29,7 @@ func ShrinkList[T any](list *linked.List[T], shrinkFun func(t T) iterable.Iterab
 	toRemoveLengths := iterable.TakeWhile(
 		func(x int) bool {
 			return x > 0
-		}, iterable.Generate[int](
+		}, iterable.Generate(
 			listLen,
 			func(x int) int {
 				return x / 2
@@ -42,7 +42,7 @@ func ShrinkList[T any](list *linked.List[T], shrinkFun func(t T) iterable.Iterab
 
 	shrinkOnes := ListShrinkOne(list, shrinkFun)
 
-	return iterable.Concat[*linked.List[T]](
+	return iterable.Concat(
 		partsRemoved,
 		shrinkOnes)
 }

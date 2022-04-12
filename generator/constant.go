@@ -1,8 +1,9 @@
 package generator
 
 import (
-	"github.com/peterzeller/go-fun/iterable"
 	"math/big"
+
+	"github.com/peterzeller/go-fun/iterable"
 )
 
 // Constant generator that always returns the same value
