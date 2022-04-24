@@ -124,7 +124,7 @@ func EnumerateSlicesDistinct[T any](length, depth int, elemGen Generator[T], eq 
 	if length <= 0 {
 		return iterable.Singleton([]T{})
 	}
-	smallerSlices := EnumerateSlices(length-1, depth, elemGen)
+	smallerSlices := EnumerateSlicesDistinct(length-1, depth, elemGen, eq)
 	return iterable.Concat(
 		smallerSlices,
 		iterable.FlatMap(
@@ -206,4 +206,18 @@ func (s *sliceDistinctGen[T]) Size(t RandomValue[[]T]) *big.Int {
 		size.Add(&size, s.elemGen.Size(rv))
 	}
 	return &size
+}
+
+func SliceFixedLength[T any](elemGen Generator[T], length int) Generator[[]T] {
+	if length == 0 {
+		return Constant([]T{})
+	}
+	if length == 1 {
+		return Map(elemGen, func(e T) []T {
+			return []T{e}
+		})
+	}
+	return Zip(elemGen, SliceFixedLength(elemGen, length-1), func(e T, es []T) []T {
+		return append([]T{e}, es...)
+	})
 }

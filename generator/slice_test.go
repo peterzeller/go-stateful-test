@@ -1,8 +1,10 @@
 package generator
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/peterzeller/go-fun/equality"
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/stretchr/testify/require"
 )
@@ -106,4 +108,61 @@ func sliceRandomValue[T any](elem []T) RandomValue[[]T] {
 	return RandomValue[[]T]{
 		Value: rvs,
 	}
+}
+
+func ExampleSliceFixedLength() {
+	g := SliceFixedLength(IntRange(1, 3), 3)
+	for it := iterable.Start(g.Enumerate(100)); it.HasNext(); it.Next() {
+		fmt.Printf("%+v\n", it.Current())
+	}
+	// Output: [1 1 1]
+	// [1 1 2]
+	// [1 1 3]
+	// [1 2 1]
+	// [1 2 2]
+	// [1 2 3]
+	// [1 3 1]
+	// [1 3 2]
+	// [1 3 3]
+	// [2 1 1]
+	// [2 1 2]
+	// [2 1 3]
+	// [2 2 1]
+	// [2 2 2]
+	// [2 2 3]
+	// [2 3 1]
+	// [2 3 2]
+	// [2 3 3]
+	// [3 1 1]
+	// [3 1 2]
+	// [3 1 3]
+	// [3 2 1]
+	// [3 2 2]
+	// [3 2 3]
+	// [3 3 1]
+	// [3 3 2]
+	// [3 3 3]
+}
+
+func ExampleSliceDistinct() {
+	g := SliceDistinct(IntRange(1, 3), equality.Default[int]())
+	for it := iterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+		fmt.Printf("%+v\n", it.Current())
+	}
+	// Output: []
+	// [1]
+	// [2]
+	// [3]
+	// [2 1]
+	// [3 1]
+	// [1 2]
+	// [3 2]
+	// [1 3]
+	// [2 3]
+	// [3 2 1]
+	// [2 3 1]
+	// [3 1 2]
+	// [1 3 2]
+	// [2 1 3]
+	// [1 2 3]
 }
