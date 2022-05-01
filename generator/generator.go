@@ -15,6 +15,7 @@ import (
 	"math/rand"
 
 	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-fun/zero"
 )
 
 type Generator[T any] interface {
@@ -163,4 +164,40 @@ func ShrinkValues[T any](gen Generator[T], v T) iterable.Iterable[T] {
 			return rv.Get()
 		},
 	)
+}
+
+// ToTypedGenerator converts an UntypedGenerator to a typed Generator.
+func ToTypedGenerator[T any](g UntypedGenerator) Generator[T] {
+	return &AnonGenerator[T]{
+		GenName: g.Name(),
+		GenRandom: func(rnd Rand, size int) RandomValue[T] {
+			return RandomValue[T]{Value: g.Random(rnd, size).Value}
+		},
+		GenShrink: func(elem RandomValue[T]) iterable.Iterable[RandomValue[T]] {
+			return iterable.Map(
+				g.Shrink(elem.Untyped()),
+				func(rv RandomValue[interface{}]) RandomValue[T] {
+					return RandomValue[T]{Value: rv.Value}
+				},
+			)
+		},
+		GenSize: func(t RandomValue[T]) *big.Int {
+			return g.Size(t.Untyped())
+		},
+		GenRValue: func(r RandomValue[T]) (T, bool) {
+			v, ok := g.RValue(r.Untyped())
+			if !ok {
+				return zero.Value[T](), false
+			}
+			return v.(T), ok
+		},
+		GenEnumerate: func(depth int) iterable.Iterable[T] {
+			return iterable.Map(
+				g.Enumerate(depth),
+				func(e interface{}) T {
+					return e.(T)
+				},
+			)
+		},
+	}
 }

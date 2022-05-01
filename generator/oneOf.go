@@ -107,3 +107,8 @@ func OneConstantOf[T comparable](values ...T) Generator[T] {
 		},
 	}
 }
+
+// Bool returns a generator for Boolean values.
+func Bool() Generator[bool] {
+	return OneConstantOf(false, true)
+}

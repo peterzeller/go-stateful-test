@@ -256,3 +256,52 @@ func Filter[A any](gen Generator[A], predicate func(a A) bool) Generator[A] {
 		},
 	}
 }
+
+// Map transfers a generator for type A to a generator of type B
+func FilterMap[A, B any](aGen Generator[A], toB func(a A) (B, bool)) Generator[B] {
+	return &AnonGenerator[B]{
+		GenName: fmt.Sprintf("Map(%s)", aGen.Name()),
+		GenRandom: func(rnd Rand, size int) RandomValue[B] {
+			rv := aGen.Random(rnd, size)
+			return RandomValue[B]{
+				Value: rv.Value,
+			}
+		},
+		GenShrink: func(rv RandomValue[B]) iterable.Iterable[RandomValue[B]] {
+			return iterable.Map(
+				aGen.Shrink(RandomValue[A]{
+					Value: rv.Value,
+				}),
+				func(rv RandomValue[A]) RandomValue[B] {
+					return RandomValue[B]{
+						Value: rv.Value,
+					}
+				})
+		},
+		GenSize: func(rv RandomValue[B]) *big.Int {
+			return aGen.Size(RandomValue[A]{
+				Value: rv.Value,
+			})
+		},
+		GenRValue: func(rv RandomValue[B]) (B, bool) {
+			a, ok := aGen.RValue(RandomValue[A]{
+				Value: rv.Value,
+			})
+			if !ok {
+				return zero.Value[B](), false
+			}
+			return toB(a)
+		},
+		GenEnumerate: func(depth int) iterable.Iterable[B] {
+			return iterable.FlatMap(
+				aGen.Enumerate(depth),
+				func(a A) iterable.Iterable[B] {
+					b, ok := toB(a)
+					if !ok {
+						return iterable.Empty[B]()
+					}
+					return iterable.Singleton(b)
+				})
+		},
+	}
+}
