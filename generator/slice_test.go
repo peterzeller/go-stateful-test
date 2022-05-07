@@ -63,12 +63,12 @@ func TestSliceRandom(t *testing.T) {
 	t.Logf("rv = %+v", rv)
 	v, ok := g.RValue(rv)
 	require.True(t, ok)
-	require.Equal(t, []int{3, 5, 5, 5, 2, 5}, v)
+	require.Equal(t, []int{3, 5, 1, 3, 2, 4}, v)
 }
 
 func TestSliceShrink(t *testing.T) {
 	g := Slice(IntRange(0, 10))
-	rv := sliceRandomValue([]int{4, 5, 6, 7, 8})
+	rv := sliceRandomValue([]int64{4, 5, 6, 7, 8})
 	shrinks := iterable.ToSlice(iterable.Map(g.Shrink(rv), func(rv RandomValue[[]int]) []int {
 		v, ok := g.RValue(rv)
 		require.True(t, ok)
@@ -100,12 +100,14 @@ func TestSliceShrink(t *testing.T) {
 		shrinks)
 }
 
-func sliceRandomValue[T any](elem []T) RandomValue[[]T] {
-	rvs := make([]RandomValue[T], len(elem))
+func sliceRandomValue(elem []int64) RandomValue[[]int] {
+	rvs := make([]RandomValue[int], len(elem))
 	for i, e := range elem {
-		rvs[i] = R(e)
+		rvs[i] = RandomValue[int]{
+			Value: e,
+		}
 	}
-	return RandomValue[[]T]{
+	return RandomValue[[]int]{
 		Value: rvs,
 	}
 }

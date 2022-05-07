@@ -143,25 +143,25 @@ func reflectionGenBasicTypes(t reflect.Type, opts *ReflectionGeneratorOptions) (
 	case reflect.Int:
 		return ToUntyped(Int()), nil
 	case reflect.Int8:
-		return nil, ErrUnsupportedType
+		return ToUntyped(Int8()), nil
 	case reflect.Int16:
-		return nil, ErrUnsupportedType
+		return ToUntyped(Int16()), nil
 	case reflect.Int32:
-		return nil, ErrUnsupportedType
+		return ToUntyped(Int32()), nil
 	case reflect.Int64:
-		return nil, ErrUnsupportedType
+		return ToUntyped(Int64()), nil
 	case reflect.Uint:
-		return nil, ErrUnsupportedType
+		return ToUntyped(UInt()), nil
 	case reflect.Uint8:
-		return nil, ErrUnsupportedType
+		return ToUntyped(UInt8()), nil
 	case reflect.Uint16:
-		return nil, ErrUnsupportedType
+		return ToUntyped(UInt16()), nil
 	case reflect.Uint32:
-		return nil, ErrUnsupportedType
+		return ToUntyped(UInt32()), nil
 	case reflect.Uint64:
-		return nil, ErrUnsupportedType
+		return ToUntyped(UInt64()), nil
 	case reflect.Uintptr:
-		return nil, ErrUnsupportedType
+		return ToUntyped(Uintptr()), nil
 	case reflect.Float32:
 		return nil, ErrUnsupportedType
 	case reflect.Float64:

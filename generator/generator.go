@@ -11,8 +11,10 @@
 package generator
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
+	"reflect"
 
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/zero"
@@ -54,7 +56,7 @@ func R[T any](elem T) RandomValue[T] {
 func (r RandomValue[T]) Get() T {
 	v, ok := r.Value.(T)
 	if !ok {
-		panic("RandomValue.Get: type mismatch")
+		panic(fmt.Errorf("RandomValue.Get: type mismatch, was %v, expected %v", reflect.TypeOf(r.Value), reflect.TypeOf(zero.Value[T]())))
 	}
 	return v
 }
