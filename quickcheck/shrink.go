@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/peterzeller/go-fun/iterable"
-	"github.com/peterzeller/go-fun/linked"
+	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-stateful-test/generator"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
 	"github.com/peterzeller/go-stateful-test/quickcheck/tree"

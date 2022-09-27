@@ -2,7 +2,7 @@ package tree
 
 import (
 	"fmt"
-	"github.com/peterzeller/go-fun/linked"
+	"github.com/peterzeller/go-fun/list/linked"
 	"strings"
 )
 

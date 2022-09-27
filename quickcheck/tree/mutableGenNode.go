@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/peterzeller/go-fun/iterable"
-	"github.com/peterzeller/go-fun/linked"
+	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-stateful-test/generator"
 )
 

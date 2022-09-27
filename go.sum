@@ -16,6 +16,8 @@ github.com/peterzeller/go-fun v0.0.0-20220507212732-ea49bd892adc h1:Dql5KfrBsV3Q
 github.com/peterzeller/go-fun v0.0.0-20220507212732-ea49bd892adc/go.mod h1:VFTb+doHRO3D3EZnW5Qm6gNznJl8+8Ps/3vCnsQ2P78=
 github.com/peterzeller/go-fun v0.0.0-20220507213501-ccff5bc78fc3 h1:SAzVgNycZbgZdT5qDQ7GUZdnUpUX9ShInTkk5Ak+hZQ=
 github.com/peterzeller/go-fun v0.0.0-20220507213501-ccff5bc78fc3/go.mod h1:VFTb+doHRO3D3EZnW5Qm6gNznJl8+8Ps/3vCnsQ2P78=
+github.com/peterzeller/go-fun v1.2.1-0.20220926213923-5ba4dc7dd38f h1:gui4M9fcPYwXa9bH7wSLAytDl1U8q7+FJPFSqTKrKDw=
+github.com/peterzeller/go-fun v1.2.1-0.20220926213923-5ba4dc7dd38f/go.mod h1:VFTb+doHRO3D3EZnW5Qm6gNznJl8+8Ps/3vCnsQ2P78=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=

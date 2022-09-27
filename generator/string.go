@@ -3,7 +3,7 @@ package generator
 import (
 	"github.com/peterzeller/go-fun/equality"
 	"github.com/peterzeller/go-fun/iterable"
-	"github.com/peterzeller/go-fun/linked"
+	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-fun/slice"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
 	"math/big"

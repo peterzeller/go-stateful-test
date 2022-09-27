@@ -2,7 +2,7 @@ package shrink
 
 import (
 	"github.com/peterzeller/go-fun/iterable"
-	"github.com/peterzeller/go-fun/linked"
+	"github.com/peterzeller/go-fun/list/linked"
 )
 
 func ShrinkListTail[T any](list *linked.List[T], shrinkFun func(t T) iterable.Iterable[T]) iterable.Iterable[*linked.List[T]] {
