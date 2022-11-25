@@ -106,6 +106,11 @@ func (s *state) Failed() bool {
 }
 
 func (s *state) Logf(format string, args ...any) {
+	if s.parent.cfg.PrintAllLogs {
+		fmt.Printf(format, args...)
+		fmt.Printf("\n")
+		return
+	}
 	// TODO implement like in real Log and add source code line to message?
 	_, _ = fmt.Fprintf(&s.log, format, args...)
 	s.log.WriteRune('\n')

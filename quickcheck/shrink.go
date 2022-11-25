@@ -34,7 +34,7 @@ func shrinkOne(ctx context.Context, s *state, runState func(*state) (result *sta
 			return s
 		}
 		// Try to run with current shrink:
-		s2 := initState(s.mainFork.genTree.Seed)
+		s2 := initState(s.cfg, s.mainFork.genTree.Seed)
 		s2.mainFork.presetTree = currentShrink
 		res := runState(s2)
 		s2.runCleanups()

@@ -1,8 +1,12 @@
 package smallcheck
 
 type Config struct {
-	Depth        int
+	// maximum depth to explore
+	Depth int
+	// print the logs after every run, not just for failing runs
 	PrintAllLogs bool
+	// print the logs directly, not just after a run
+	PrintLiveLogs bool
 }
 
 func setDefaults(cfg Config) Config {

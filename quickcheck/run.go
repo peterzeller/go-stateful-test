@@ -49,7 +49,7 @@ func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 		return nil
 	}
 	var s *state = firstNotNil[state](cfg, func(iteration int) *state {
-		s := initState(int64(iteration))
+		s := initState(cfg, int64(iteration))
 		defer s.runCleanups()
 		return runState(s)
 	})

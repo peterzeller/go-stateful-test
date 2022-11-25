@@ -26,6 +26,7 @@ type state struct {
 	// As we only want to print the log for the last failed test run, we cannot write directly to standard out.
 	log     strings.Builder
 	cleanup []func()
+	cfg     Config
 }
 
 func (s *state) Cleanup(f func()) {
@@ -179,6 +180,11 @@ func (s *state) HasMore() bool {
 }
 
 func (s *state) Logf(format string, args ...any) {
+	if s.cfg.PrintAllLogs {
+		fmt.Printf(format, args...)
+		fmt.Printf("\n")
+		return
+	}
 	// TODO implement like in real Log and add source code line to message?
 	_, _ = fmt.Fprintf(&s.log, format, args...)
 	s.log.WriteRune('\n')
@@ -215,7 +221,7 @@ func (s *state) runCleanups() {
 	s.cleanup = nil
 }
 
-func initState(seed int64) *state {
+func initState(cfg Config, seed int64) *state {
 	s := &state{
 		mainFork: &fork{
 			parent:     nil,
@@ -225,6 +231,7 @@ func initState(seed int64) *state {
 		},
 		failed: false,
 		log:    strings.Builder{},
+		cfg:    cfg,
 	}
 	s.mainFork.parent = s
 	return s
