@@ -24,7 +24,12 @@ type state struct {
 	size int64
 	// buffer for log messages.
 	// As we only want to print the log for the last failed test run, we cannot write directly to standard out.
-	log strings.Builder
+	log     strings.Builder
+	cleanup []func()
+}
+
+func (s *state) Cleanup(f func()) {
+	s.cleanup = append(s.cleanup, f)
 }
 
 // fork of a state
@@ -201,6 +206,13 @@ func (s *state) Failed() bool {
 
 func (s *state) GetLog() string {
 	return s.log.String()
+}
+
+func (s *state) runCleanups() {
+	for _, f := range s.cleanup {
+		f()
+	}
+	s.cleanup = nil
 }
 
 func initState(seed int64) *state {

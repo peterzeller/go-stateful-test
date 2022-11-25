@@ -13,4 +13,6 @@ type T interface {
 	PickValue(untyped generator.UntypedGenerator) interface{}
 	// HasMore is used for generating a sequence of values
 	HasMore() bool
+	// Cleanup runs a function when the test is done
+	Cleanup(f func())
 }

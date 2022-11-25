@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"github.com/peterzeller/go-stateful-test/smallcheck"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"unicode/utf8"
@@ -76,4 +77,28 @@ func TestHasMore(t *testing.T) {
 		})
 	})
 	require.Contains(t, out, "l = [0 0 0 0 0 0]")
+}
+
+func TestCleanupSmallcheck(t *testing.T) {
+	count := 0
+	smallcheck.Run(t, smallcheck.Config{}, func(t statefulTest.T) {
+		x := pick.Val(t, generator.Int())
+		t.Cleanup(func() {
+			count -= x
+		})
+		count += x
+	})
+	require.Equal(t, 0, count)
+}
+
+func TestCleanupQuickcheck(t *testing.T) {
+	count := 0
+	quickcheck.Run(t, quickcheck.Config{}, func(t statefulTest.T) {
+		x := pick.Val(t, generator.Int())
+		t.Cleanup(func() {
+			count -= x
+		})
+		count += x
+	})
+	require.Equal(t, 0, count)
 }

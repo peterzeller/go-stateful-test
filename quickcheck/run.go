@@ -50,6 +50,7 @@ func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 	}
 	var s *state = firstNotNil[state](cfg, func(iteration int) *state {
 		s := initState(int64(iteration))
+		defer s.runCleanups()
 		return runState(s)
 	})
 	if s == nil || !s.Failed() {

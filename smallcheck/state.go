@@ -37,6 +37,7 @@ func (rs *rState) exploreStates(runState func(s *state)) *state {
 					panic(r)
 				}
 			}()
+			defer s.runCleanups()
 
 			runState(s)
 		}()
@@ -82,6 +83,11 @@ type state struct {
 	failed       bool
 	depth        int
 	hasMoreCalls int
+	cleanup      []func()
+}
+
+func (s *state) Cleanup(f func()) {
+	s.cleanup = append(s.cleanup, f)
 }
 
 func (s *state) Errorf(format string, args ...interface{}) {
@@ -145,4 +151,11 @@ type emptyIterator struct {
 func (s *state) HasMore() bool {
 	s.hasMoreCalls++
 	return s.hasMoreCalls < s.parent.maxDepth
+}
+
+func (s *state) runCleanups() {
+	for _, f := range s.cleanup {
+		f()
+	}
+	s.cleanup = nil
 }

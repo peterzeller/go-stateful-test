@@ -37,6 +37,7 @@ func shrinkOne(ctx context.Context, s *state, runState func(*state) (result *sta
 		s2 := initState(s.mainFork.genTree.Seed)
 		s2.mainFork.presetTree = currentShrink
 		res := runState(s2)
+		s2.runCleanups()
 		if res != nil && res.failed {
 			newSize := res.mainFork.genTree.Size()
 			oldSize := s.mainFork.genTree.Size()
