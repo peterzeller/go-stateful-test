@@ -30,7 +30,7 @@ func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 			r := recover()
 			if r != nil {
 				if err, ok := r.(error); ok {
-					if errors.Is(err, testFailedErr) {
+					if errors.Is(err, errTestFailed) {
 						result = s
 						return
 					}

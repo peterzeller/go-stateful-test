@@ -63,11 +63,11 @@ func (r RandomValue[T]) Get() T {
 }
 
 func (r RandomValue[T]) Untyped() RandomValue[interface{}] {
-	return RandomValue[interface{}]{Value: r.Value}
+	return RandomValue[interface{}](r)
 }
 
 func RTyped[T any](elem RandomValue[interface{}]) RandomValue[T] {
-	return RandomValue[T]{Value: elem.Value}
+	return RandomValue[T](elem)
 }
 
 // UntypedGenerator is a workaround for Go not having existential types.
@@ -180,7 +180,7 @@ func ToTypedGenerator[T any](g UntypedGenerator) Generator[T] {
 			return iterable.Map(
 				g.Shrink(elem.Untyped()),
 				func(rv RandomValue[interface{}]) RandomValue[T] {
-					return RandomValue[T]{Value: rv.Value}
+					return RandomValue[T](rv)
 				},
 			)
 		},

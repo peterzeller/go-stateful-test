@@ -36,7 +36,7 @@ func (g genInt64) Random(rnd Rand, size int) RandomValue[int64] {
 	n := 1 + g.max - g.min
 	switch {
 	// higher probability for 0
-	case p < 0.05 && g.min < 0 && g.max < 0:
+	case p < 0.05 && g.min < 0 && 0 < g.max:
 		return R(int64(0))
 	// higher probability for boundary cases
 	case p < 0.1:

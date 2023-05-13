@@ -35,9 +35,6 @@ func (g genUInt64) Random(rnd Rand, size int) RandomValue[uint64] {
 	p := r.Float64()
 	n := 1 + g.max - g.min
 	switch {
-	// higher probability for 0
-	case p < 0.05 && g.min < 0 && g.max < 0:
-		return R(uint64(0))
 	// higher probability for boundary cases
 	case p < 0.1:
 		return R(g.min)
@@ -87,11 +84,5 @@ func (g genUInt64) RValue(r RandomValue[uint64]) (uint64, bool) {
 
 func (g genUInt64) Size(r RandomValue[uint64]) *big.Int {
 	elem := r.Get()
-	if elem < 0 {
-		r := big.NewInt(int64(elem))
-		r.Abs(r)
-		r.Add(r, big.NewInt(1))
-		return r
-	}
 	return big.NewInt(int64(elem))
 }

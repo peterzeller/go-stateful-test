@@ -20,8 +20,6 @@ type state struct {
 	mainFork *fork
 	// initialized to false and set to true when the test has failed
 	failed bool
-	// size is the total size of all generated values in the run
-	size int64
 	// buffer for log messages.
 	// As we only want to print the log for the last failed test run, we cannot write directly to standard out.
 	log     strings.Builder
@@ -199,11 +197,11 @@ func (s *state) Errorf(format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(&s.log, format, args...)
 }
 
-var testFailedErr = fmt.Errorf("test failed")
+var errTestFailed = fmt.Errorf("test failed")
 
 func (s *state) FailNow() {
 	s.failed = true
-	panic(testFailedErr)
+	panic(errTestFailed)
 }
 
 func (s *state) Failed() bool {

@@ -15,30 +15,20 @@ func Map[A, B any](aGen Generator[A], toB func(a A) B) Generator[B] {
 		GenName: fmt.Sprintf("Map(%s)", aGen.Name()),
 		GenRandom: func(rnd Rand, size int) RandomValue[B] {
 			rv := aGen.Random(rnd, size)
-			return RandomValue[B]{
-				Value: rv.Value,
-			}
+			return RandomValue[B](rv)
 		},
 		GenShrink: func(rv RandomValue[B]) iterable.Iterable[RandomValue[B]] {
 			return iterable.Map(
-				aGen.Shrink(RandomValue[A]{
-					Value: rv.Value,
-				}),
+				aGen.Shrink(RandomValue[A](rv)),
 				func(rv RandomValue[A]) RandomValue[B] {
-					return RandomValue[B]{
-						Value: rv.Value,
-					}
+					return RandomValue[B](rv)
 				})
 		},
 		GenSize: func(rv RandomValue[B]) *big.Int {
-			return aGen.Size(RandomValue[A]{
-				Value: rv.Value,
-			})
+			return aGen.Size(RandomValue[A](rv))
 		},
 		GenRValue: func(rv RandomValue[B]) (B, bool) {
-			a, ok := aGen.RValue(RandomValue[A]{
-				Value: rv.Value,
-			})
+			a, ok := aGen.RValue(RandomValue[A](rv))
 			if !ok {
 				return zero.Value[B](), false
 			}
@@ -264,30 +254,20 @@ func FilterMap[A, B any](aGen Generator[A], toB func(a A) (B, bool)) Generator[B
 		GenName: fmt.Sprintf("Map(%s)", aGen.Name()),
 		GenRandom: func(rnd Rand, size int) RandomValue[B] {
 			rv := aGen.Random(rnd, size)
-			return RandomValue[B]{
-				Value: rv.Value,
-			}
+			return RandomValue[B](rv)
 		},
 		GenShrink: func(rv RandomValue[B]) iterable.Iterable[RandomValue[B]] {
 			return iterable.Map(
-				aGen.Shrink(RandomValue[A]{
-					Value: rv.Value,
-				}),
+				aGen.Shrink(RandomValue[A](rv)),
 				func(rv RandomValue[A]) RandomValue[B] {
-					return RandomValue[B]{
-						Value: rv.Value,
-					}
+					return RandomValue[B](rv)
 				})
 		},
 		GenSize: func(rv RandomValue[B]) *big.Int {
-			return aGen.Size(RandomValue[A]{
-				Value: rv.Value,
-			})
+			return aGen.Size(RandomValue[A](rv))
 		},
 		GenRValue: func(rv RandomValue[B]) (B, bool) {
-			a, ok := aGen.RValue(RandomValue[A]{
-				Value: rv.Value,
-			})
+			a, ok := aGen.RValue(RandomValue[A](rv))
 			if !ok {
 				return zero.Value[B](), false
 			}

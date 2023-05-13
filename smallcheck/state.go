@@ -101,7 +101,7 @@ func (s *state) Errorf(format string, args ...interface{}) {
 
 func (s *state) FailNow() {
 	s.failed = true
-	panic(testFailedErr)
+	panic(errTestFailed)
 }
 
 func (s *state) Failed() bool {
