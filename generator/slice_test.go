@@ -2,16 +2,17 @@ package generator
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"testing"
 
 	"github.com/peterzeller/go-fun/equality"
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSliceEnumerate(t *testing.T) {
 	g := Slice(IntRange(1, 3))
-	enumerated := iterable.ToSlice(g.Enumerate(3))
+	enumerated := geniterable.ToSlice(g.Enumerate(3))
 	require.Equal(t, [][]int{
 		{},
 		{1},
@@ -114,7 +115,7 @@ func sliceRandomValue(elem []int64) RandomValue[[]int] {
 
 func ExampleSliceFixedLength() {
 	g := SliceFixedLength(IntRange(1, 3), 3)
-	for it := iterable.Start(g.Enumerate(100)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(g.Enumerate(100)); it.HasNext(); it.Next() {
 		fmt.Printf("%+v\n", it.Current())
 	}
 	// Output: [1 1 1]
@@ -148,7 +149,7 @@ func ExampleSliceFixedLength() {
 
 func ExampleSliceDistinct() {
 	g := SliceDistinct(IntRange(1, 3), equality.Default[int]())
-	for it := iterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
 		fmt.Printf("%+v\n", it.Current())
 	}
 	// Output: []

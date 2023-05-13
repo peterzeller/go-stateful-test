@@ -1,9 +1,9 @@
 package generator
 
 import (
-	"math/big"
-
 	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"math/big"
 )
 
 // Constant generator that always returns the same value
@@ -25,8 +25,8 @@ func (c constGenerator[T]) Random(rnd Rand, size int) RandomValue[T] {
 	return R(c.c)
 }
 
-func (c constGenerator[T]) Enumerate(depth int) iterable.Iterable[T] {
-	return iterable.Singleton(c.c)
+func (c constGenerator[T]) Enumerate(depth int) geniterable.Iterable[T] {
+	return geniterable.Singleton(c.c)
 }
 
 func (c constGenerator[T]) Shrink(elem RandomValue[T]) iterable.Iterable[RandomValue[T]] {

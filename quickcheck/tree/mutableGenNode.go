@@ -2,11 +2,11 @@ package tree
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-fun/iterable"
 	"math/big"
 	"math/rand"
 	"strings"
 
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-stateful-test/generator"
 )

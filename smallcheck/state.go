@@ -2,8 +2,8 @@ package smallcheck
 
 import (
 	"fmt"
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-stateful-test/generator"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"strings"
 )
 
@@ -14,6 +14,8 @@ type rState struct {
 	maxDepth        int
 	done            bool
 	cfg             Config
+	// runIsExhaustive is initially true, and is set to false when we start an iterator that does not exhaustively cover all cases
+	runIsExhaustive bool
 }
 
 func (rs *rState) exploreStates(runState func(s *state)) *state {
@@ -59,13 +61,14 @@ func (rs *rState) advanceStack(depth int) {
 		return
 	}
 	entry := rs.stack[depth]
-	newCurrent, ok := entry.iterator.Next()
-	if ok {
+	newCurrent := entry.iterator.Next()
+	if newCurrent.Present() {
 		// if we have a next element, continue at this level
-		entry.current = newCurrent
+		entry.current = newCurrent.Value()
 		rs.continueAtDepth = depth
 		return
 	}
+	rs.runIsExhaustive = rs.runIsExhaustive && newCurrent.Exhaustive()
 	// otherwise, we need to advance the stack one position below
 	rs.stack[depth] = nil
 	rs.advanceStack(depth - 1)
@@ -73,7 +76,7 @@ func (rs *rState) advanceStack(depth int) {
 
 type stackEntry struct {
 	current  interface{}
-	iterator iterable.Iterator[interface{}]
+	iterator geniterable.Iterator[interface{}]
 }
 
 // state for a single iteration
@@ -131,13 +134,14 @@ func (s *state) PickValue(gen generator.UntypedGenerator) interface{} {
 	}
 	// We don't have an iterator for this stack level yet
 	it := gen.Enumerate(rs.maxDepth).Iterator()
-	current, ok := it.Next()
-	if !ok {
+	current := it.Next()
+	if !current.Present() {
+		rs.runIsExhaustive = rs.runIsExhaustive && current.Exhaustive()
 		panic(emptyIterator{depth: s.depth})
 	}
 	newEntry := &stackEntry{
 		iterator: it,
-		current:  current,
+		current:  current.Value(),
 	}
 	if s.depth < len(rs.stack) {
 		rs.stack[s.depth] = newEntry
@@ -146,7 +150,7 @@ func (s *state) PickValue(gen generator.UntypedGenerator) interface{} {
 	}
 
 	s.depth++
-	return current
+	return current.Value()
 }
 
 type emptyIterator struct {

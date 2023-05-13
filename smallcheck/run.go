@@ -43,11 +43,16 @@ func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 			maxDepth:        depth,
 			done:            false,
 			cfg:             cfg,
+			runIsExhaustive: true,
 		}
 
 		s := rs.exploreStates(runState)
 		if s != nil && s.failed {
 			t.Errorf("Test failed at depth %d:\n%s", depth, s.GetLog())
+			return
+		}
+		if rs.runIsExhaustive {
+			t.Logf("run is exhaustive with depth = %d", depth)
 			return
 		}
 	}

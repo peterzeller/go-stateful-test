@@ -1,9 +1,9 @@
 package generator
 
 import (
-	"math/big"
-
 	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"math/big"
 )
 
 type AnonGenerator[T any] struct {
@@ -12,7 +12,7 @@ type AnonGenerator[T any] struct {
 	GenShrink    func(elem RandomValue[T]) iterable.Iterable[RandomValue[T]]
 	GenSize      func(t RandomValue[T]) *big.Int
 	GenRValue    func(r RandomValue[T]) (T, bool)
-	GenEnumerate func(depth int) iterable.Iterable[T]
+	GenEnumerate func(depth int) geniterable.Iterable[T]
 }
 
 func (a *AnonGenerator[T]) Name() string {
@@ -23,7 +23,7 @@ func (a *AnonGenerator[T]) Random(rnd Rand, size int) RandomValue[T] {
 	return a.GenRandom(rnd, size)
 }
 
-func (a *AnonGenerator[T]) Enumerate(depth int) iterable.Iterable[T] {
+func (a *AnonGenerator[T]) Enumerate(depth int) geniterable.Iterable[T] {
 	return a.GenEnumerate(depth)
 }
 

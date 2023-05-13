@@ -2,9 +2,10 @@ package generator
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math/big"
 
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/zero"
 )
 
@@ -43,8 +44,8 @@ func Map[A, B any](aGen Generator[A], toB func(a A) B) Generator[B] {
 			}
 			return toB(a), true
 		},
-		GenEnumerate: func(depth int) iterable.Iterable[B] {
-			return iterable.Map(
+		GenEnumerate: func(depth int) geniterable.Iterable[B] {
+			return geniterable.Map(
 				aGen.Enumerate(depth),
 				toB)
 		},
@@ -128,10 +129,10 @@ func FlatMap[A, B any](aGen Generator[A], toB func(a A) Generator[B]) Generator[
 			bGen := toB(av)
 			return bGen.RValue(fRv.bRv)
 		},
-		GenEnumerate: func(depth int) iterable.Iterable[B] {
-			return iterable.FlatMap(
+		GenEnumerate: func(depth int) geniterable.Iterable[B] {
+			return geniterable.FlatMap(
 				aGen.Enumerate(depth),
-				func(a A) iterable.Iterable[B] {
+				func(a A) geniterable.Iterable[B] {
 					bGen := toB(a)
 					return bGen.Enumerate(depth)
 				})
@@ -205,11 +206,11 @@ func Zip[A, B, C any](aGen Generator[A], bGen Generator[B], combine func(a A, b 
 			}
 			return combine(av, bv), true
 		},
-		GenEnumerate: func(depth int) iterable.Iterable[C] {
-			return iterable.FlatMap(
+		GenEnumerate: func(depth int) geniterable.Iterable[C] {
+			return geniterable.FlatMap(
 				aGen.Enumerate(depth),
-				func(a A) iterable.Iterable[C] {
-					return iterable.Map(
+				func(a A) geniterable.Iterable[C] {
+					return geniterable.Map(
 						bGen.Enumerate(depth),
 						func(b B) C {
 							return combine(a, b)
@@ -249,8 +250,8 @@ func Filter[A any](gen Generator[A], predicate func(a A) bool) Generator[A] {
 			v, ok := gen.RValue(rv)
 			return v, ok && predicate(v)
 		},
-		GenEnumerate: func(depth int) iterable.Iterable[A] {
-			return iterable.Filter(
+		GenEnumerate: func(depth int) geniterable.Iterable[A] {
+			return geniterable.Filter(
 				gen.Enumerate(depth),
 				predicate)
 		},
@@ -292,15 +293,15 @@ func FilterMap[A, B any](aGen Generator[A], toB func(a A) (B, bool)) Generator[B
 			}
 			return toB(a)
 		},
-		GenEnumerate: func(depth int) iterable.Iterable[B] {
-			return iterable.FlatMap(
+		GenEnumerate: func(depth int) geniterable.Iterable[B] {
+			return geniterable.FlatMap(
 				aGen.Enumerate(depth),
-				func(a A) iterable.Iterable[B] {
+				func(a A) geniterable.Iterable[B] {
 					b, ok := toB(a)
 					if !ok {
-						return iterable.Empty[B]()
+						return geniterable.Empty[B]()
 					}
-					return iterable.Singleton(b)
+					return geniterable.Singleton(b)
 				})
 		},
 	}

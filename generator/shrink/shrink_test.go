@@ -1,10 +1,10 @@
 package shrink
 
 import (
+	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/list/linked"
 	"testing"
 
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/stretchr/testify/require"
 )
 

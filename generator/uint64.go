@@ -1,10 +1,10 @@
 package generator
 
 import (
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math"
 	"math/big"
-
-	"github.com/peterzeller/go-fun/iterable"
 )
 
 func UInt64() Generator[uint64] {
@@ -59,8 +59,8 @@ func (g genUInt64) Random(rnd Rand, size int) RandomValue[uint64] {
 	}
 }
 
-func (g genUInt64) Enumerate(depth int) iterable.Iterable[uint64] {
-	return iterable.Take(depth, iterable.RangeI(g.min, g.max))
+func (g genUInt64) Enumerate(depth int) geniterable.Iterable[uint64] {
+	return geniterable.TakeExhaustive(depth, geniterable.RangeI(g.min, g.max))
 }
 
 func (g genUInt64) Shrink(r RandomValue[uint64]) iterable.Iterable[RandomValue[uint64]] {

@@ -1,10 +1,10 @@
 package generator
 
 import (
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math"
 	"math/big"
-
-	"github.com/peterzeller/go-fun/iterable"
 )
 
 func Int64() Generator[int64] {
@@ -63,14 +63,14 @@ func (g genInt64) Random(rnd Rand, size int) RandomValue[int64] {
 	}
 }
 
-func (g genInt64) Enumerate(depth int) iterable.Iterable[int64] {
+func (g genInt64) Enumerate(depth int) geniterable.Iterable[int64] {
 	if g.min < 0 && g.max > 0 {
-		return iterable.Take(depth,
-			iterable.FlatMap(
-				iterable.Generate(0, func(i int64) int64 { return i + 1 }),
-				func(a int64) iterable.Iterable[int64] {
+		return geniterable.TakeExhaustive(depth,
+			geniterable.FlatMap(
+				geniterable.Generate(0, func(i int64) int64 { return i + 1 }),
+				func(a int64) geniterable.Iterable[int64] {
 					if a == 0 {
-						return iterable.Singleton(int64(0))
+						return geniterable.Singleton(int64(0))
 					}
 					res := make([]int64, 0, 2)
 					if a <= g.max {
@@ -79,10 +79,10 @@ func (g genInt64) Enumerate(depth int) iterable.Iterable[int64] {
 					if -a >= g.min {
 						res = append(res, -a)
 					}
-					return iterable.New(res...)
+					return geniterable.New(res...)
 				}))
 	}
-	return iterable.Take(depth, iterable.RangeI(g.min, g.max))
+	return geniterable.TakeExhaustive(depth, geniterable.RangeI(g.min, g.max))
 }
 
 func (g genInt64) Shrink(r RandomValue[int64]) iterable.Iterable[RandomValue[int64]] {

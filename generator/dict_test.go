@@ -2,14 +2,14 @@ package generator
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 
 	"github.com/peterzeller/go-fun/hash"
-	"github.com/peterzeller/go-fun/iterable"
 )
 
 func ExampleDict() {
 	g := Dict(IntRange(1, 2), IntRange(3, 4), hash.Num[int]())
-	for it := iterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
 		fmt.Println(it.Current())
 	}
 	// Output: []
@@ -29,7 +29,7 @@ func ExampleDict() {
 
 func ExampleDictMut() {
 	g := DictMut(IntRange(1, 2), IntRange(3, 4))
-	for it := iterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
 		fmt.Println(it.Current())
 	}
 	// Output: map[]

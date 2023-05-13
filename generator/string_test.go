@@ -1,9 +1,10 @@
 package generator
 
 import (
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"testing"
 
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,5 +20,5 @@ func TestGenString_Shrink(t *testing.T) {
 
 func TestGenString_Enumerate(t *testing.T) {
 	s := String('a', 'b')
-	require.Equal(t, []string{"", "a", "b", "aa", "ab", "ba", "bb", "aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"}, iterable.ToSlice(s.Enumerate(3)))
+	require.Equal(t, []string{"", "a", "b", "aa", "ab", "ba", "bb", "aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"}, geniterable.ToSlice(s.Enumerate(3)))
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-fun/slice"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
 	"math/big"
 	"strings"
@@ -37,22 +38,22 @@ func (g genString) Random(rnd Rand, size int) RandomValue[string] {
 	return R(s.String())
 }
 
-func (g genString) Enumerate(depth int) iterable.Iterable[string] {
-	return iterable.FlatMap(
-		iterable.Range(0, depth+1),
-		func(length int) iterable.Iterable[string] {
+func (g genString) Enumerate(depth int) geniterable.Iterable[string] {
+	return geniterable.FlatMap(
+		geniterable.NonExhaustive(geniterable.Range(0, depth+1)),
+		func(length int) geniterable.Iterable[string] {
 			return enumerateStrings(length, g.chars)
 		})
 }
 
-func enumerateStrings(length int, chars []rune) iterable.Iterable[string] {
+func enumerateStrings(length int, chars []rune) geniterable.Iterable[string] {
 	if length <= 0 {
-		return iterable.Singleton("")
+		return geniterable.Singleton("")
 	} else {
 		smaller := enumerateStrings(length-1, chars)
-		return iterable.FlatMap(smaller, func(a string) iterable.Iterable[string] {
-			return iterable.Map(
-				iterable.FromSlice(chars),
+		return geniterable.FlatMap(smaller, func(a string) geniterable.Iterable[string] {
+			return geniterable.Map(
+				geniterable.FromSlice(chars),
 				func(r rune) string {
 					var s strings.Builder
 					s.WriteString(a)

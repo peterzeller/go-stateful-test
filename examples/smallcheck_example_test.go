@@ -10,9 +10,9 @@ import (
 	"testing"
 )
 
-//The following function is supposed to compute the maximum out of 3 integers.
-//Unfortunately it contains a bug.
-//Can you find a counter example where it would fail?
+// The following function is supposed to compute the maximum out of 3 integers.
+// Unfortunately it contains a bug.
+// Can you find a counter example where it would fail?
 func max3(x, y, z int) int {
 	if x > y && x > z {
 		return x

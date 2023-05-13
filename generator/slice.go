@@ -2,10 +2,11 @@ package generator
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math/big"
 
 	"github.com/peterzeller/go-fun/equality"
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-fun/slice"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
@@ -22,25 +23,25 @@ type sliceGen[T any] struct {
 	elemGen Generator[T]
 }
 
-func (s *sliceGen[T]) Enumerate(depth int) iterable.Iterable[[]T] {
-	return EnumerateSlices(depth, depth, s.elemGen)
+func (s *sliceGen[T]) Enumerate(depth int) geniterable.Iterable[[]T] {
+	return geniterable.NonExhaustive(EnumerateSlices(depth, depth, s.elemGen))
 }
 
-func EnumerateSlices[T any](length, depth int, elemGen Generator[T]) iterable.Iterable[[]T] {
+func EnumerateSlices[T any](length, depth int, elemGen Generator[T]) geniterable.Iterable[[]T] {
 	if length <= 0 {
-		return iterable.Singleton([]T{})
+		return geniterable.Singleton([]T{})
 	}
 	smallerSlices := EnumerateSlices(length-1, depth, elemGen)
-	return iterable.Concat(
+	return geniterable.Concat(
 		smallerSlices,
-		iterable.FlatMap(
+		geniterable.FlatMap(
 			smallerSlices,
-			func(tail []T) iterable.Iterable[[]T] {
+			func(tail []T) geniterable.Iterable[[]T] {
 				// append only to the longest lists
 				if len(tail) < length-1 {
-					return iterable.Empty[[]T]()
+					return geniterable.Empty[[]T]()
 				}
-				return iterable.Map(
+				return geniterable.Map(
 					elemGen.Enumerate(depth),
 					func(head T) []T {
 						return append([]T{head}, tail...)
@@ -116,33 +117,34 @@ type sliceDistinctGen[T any] struct {
 	eq      equality.Equality[T]
 }
 
-func (s *sliceDistinctGen[T]) Enumerate(depth int) iterable.Iterable[[]T] {
-	return EnumerateSlicesDistinct(depth, depth, s.elemGen, s.eq)
+func (s *sliceDistinctGen[T]) Enumerate(depth int) geniterable.Iterable[[]T] {
+	// non-exhaustive, because there is no limit on length
+	return geniterable.NonExhaustive(EnumerateSlicesDistinct(depth, depth, s.elemGen, s.eq))
 }
 
-func EnumerateSlicesDistinct[T any](length, depth int, elemGen Generator[T], eq equality.Equality[T]) iterable.Iterable[[]T] {
+func EnumerateSlicesDistinct[T any](length, depth int, elemGen Generator[T], eq equality.Equality[T]) geniterable.Iterable[[]T] {
 	if length <= 0 {
-		return iterable.Singleton([]T{})
+		return geniterable.Singleton([]T{})
 	}
 	smallerSlices := EnumerateSlicesDistinct(length-1, depth, elemGen, eq)
-	return iterable.Concat(
+	return geniterable.Concat(
 		smallerSlices,
-		iterable.FlatMap(
+		geniterable.FlatMap(
 			smallerSlices,
-			func(tail []T) iterable.Iterable[[]T] {
+			func(tail []T) geniterable.Iterable[[]T] {
 				// append only to the longest lists
 				if len(tail) < length-1 {
-					return iterable.Empty[[]T]()
+					return geniterable.Empty[[]T]()
 				}
-				return iterable.FlatMap(
+				return geniterable.FlatMap(
 					elemGen.Enumerate(depth),
-					func(head T) iterable.Iterable[[]T] {
+					func(head T) geniterable.Iterable[[]T] {
 						if slice.ContainsEq(tail, head, eq) {
 							// skip if already in the list
 							// (we could inverse the logic here to make this more efficient)
-							return iterable.Empty[[]T]()
+							return geniterable.Empty[[]T]()
 						}
-						return iterable.Singleton(append([]T{head}, tail...))
+						return geniterable.Singleton(append([]T{head}, tail...))
 					})
 			},
 		),

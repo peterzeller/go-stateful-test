@@ -2,11 +2,11 @@ package quickcheck
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math/big"
 	"math/rand"
 	"strings"
-
-	"github.com/peterzeller/go-fun/iterable"
 
 	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-stateful-test/generator"
@@ -75,7 +75,7 @@ func (f forkGenerator) Size(elem generator.RandomValue[*fork]) *big.Int {
 	return elem.Get().Size()
 }
 
-func (f forkGenerator) Enumerate(depth int) iterable.Iterable[*fork] {
+func (f forkGenerator) Enumerate(depth int) geniterable.Iterable[*fork] {
 	panic("enumerate is not implemented for quickcheck")
 }
 

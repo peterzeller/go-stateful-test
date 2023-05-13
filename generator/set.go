@@ -2,10 +2,11 @@ package generator
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math/big"
 
 	"github.com/peterzeller/go-fun/hash"
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/list/linked"
 	"github.com/peterzeller/go-fun/set/hashset"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
@@ -25,20 +26,34 @@ type setGenerator[T any] struct {
 }
 
 // Enumerate implements Generator
-func (s *setGenerator[T]) Enumerate(depth int) iterable.Iterable[hashset.Set[T]] {
-	elems := linked.FromIterable(s.gen.Enumerate(depth))
-	return enumerateSets(elems.Reversed(), s.h)
+func (s *setGenerator[T]) Enumerate(depth int) geniterable.Iterable[hashset.Set[T]] {
+	it := s.gen.Enumerate(depth).Iterator()
+	elems := linked.New[T]()
+	exhaustive := false
+	for {
+		r := it.Next()
+		if !r.Present() {
+			exhaustive = r.Exhaustive()
+			break
+		}
+		elems = linked.Cons(r.Value(), elems)
+	}
+	sets := enumerateSets(elems.Reversed(), s.h)
+	if !exhaustive {
+		sets = geniterable.NonExhaustive(sets)
+	}
+	return sets
 }
 
-func enumerateSets[T any](elems *linked.List[T], h hash.EqHash[T]) iterable.Iterable[hashset.Set[T]] {
+func enumerateSets[T any](elems *linked.List[T], h hash.EqHash[T]) geniterable.Iterable[hashset.Set[T]] {
 	if elems == nil {
 		// return empty set
-		return iterable.Singleton(hashset.New(h))
+		return geniterable.Singleton(hashset.New(h))
 	}
 	tailSets := enumerateSets(elems.Tail(), h)
-	return iterable.Concat(
+	return geniterable.Concat(
 		tailSets,
-		iterable.Map(
+		geniterable.Map(
 			tailSets,
 			func(tail hashset.Set[T]) hashset.Set[T] {
 				return tail.Add(elems.Head())

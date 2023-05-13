@@ -1,10 +1,11 @@
 package generator
 
 import (
+	"github.com/peterzeller/go-fun/iterable"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math/big"
 
 	"github.com/peterzeller/go-fun/equality"
-	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/slice"
 	"github.com/peterzeller/go-fun/zero"
 )
@@ -25,9 +26,9 @@ func OneOf[T any](gs ...Generator[T]) Generator[T] {
 				},
 			}
 		},
-		GenEnumerate: func(depth int) iterable.Iterable[T] {
-			return iterable.FlatMapBreadthFirst(iterable.FromSlice(gs),
-				func(g Generator[T]) iterable.Iterable[T] {
+		GenEnumerate: func(depth int) geniterable.Iterable[T] {
+			return geniterable.FlatMapBreadthFirst(geniterable.FromSlice(gs),
+				func(g Generator[T]) geniterable.Iterable[T] {
 					return g.Enumerate(depth)
 				})
 		},
@@ -75,8 +76,8 @@ func OneConstantOf[T comparable](values ...T) Generator[T] {
 				Value: g,
 			}
 		},
-		GenEnumerate: func(depth int) iterable.Iterable[T] {
-			return iterable.Take(depth, iterable.FromSlice(values))
+		GenEnumerate: func(depth int) geniterable.Iterable[T] {
+			return geniterable.TakeExhaustive(depth, geniterable.FromSlice(values))
 		},
 		GenShrink: func(elem RandomValue[T]) iterable.Iterable[RandomValue[T]] {
 			v := elem.Get()

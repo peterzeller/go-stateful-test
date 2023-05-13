@@ -2,9 +2,8 @@ package generator
 
 import (
 	"fmt"
+	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"math/big"
-
-	"github.com/peterzeller/go-fun/iterable"
 )
 
 // This example shows how to use the Map function to create a generator for big.Int from a generator for int.
@@ -18,7 +17,7 @@ func ExampleMap() {
 	})
 
 	// enumerate some values:
-	vals := iterable.ToSlice(bigIntGen.Enumerate(10))
+	vals := geniterable.ToSlice(bigIntGen.Enumerate(10))
 	fmt.Printf("vals = %+v\n", vals)
 
 	// Output: vals = [+0 +1 +2 +3 +4 +5 +6 +7 +8 +9]
@@ -47,7 +46,7 @@ func ExampleFlatMap() {
 	})
 
 	// enumerate some values:
-	vals := iterable.ToSlice(pairGen.Enumerate(3))
+	vals := geniterable.ToSlice(pairGen.Enumerate(3))
 	for _, v := range vals {
 		fmt.Printf("(%d, %#v)\n", v.n, v.s)
 	}
@@ -128,7 +127,7 @@ func ExampleZip() {
 	})
 
 	// enumerate some values:
-	vals := iterable.ToSlice(pairGen.Enumerate(3))
+	vals := geniterable.ToSlice(pairGen.Enumerate(3))
 	for _, v := range vals {
 		fmt.Printf("(%d, %#v)\n", v.n, v.s)
 	}
@@ -191,7 +190,7 @@ func ExampleFilter() {
 	})
 
 	// enumerate some values:
-	vals := iterable.ToSlice(evenGen.Enumerate(10))
+	vals := geniterable.ToSlice(evenGen.Enumerate(10))
 	fmt.Printf("vals = %v\n", vals)
 
 	// output: vals = [0 2 4 6 8]
