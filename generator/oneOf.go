@@ -10,93 +10,99 @@ import (
 	"github.com/peterzeller/go-fun/zero"
 )
 
-func OneOf[T any](gs ...Generator[T]) Generator[T] {
+func OneOf[T, R any](gs ...Generator[T, R]) Generator[T, OneOfRandom[R]] {
 	if len(gs) == 0 {
-		return Constant(zero.Value[T]())
+		return Empty[T, OneOfRandom[R]]()
 	}
-	return &AnonGenerator[T]{
+	return &AnonGenerator[T, OneOfRandom[R]]{
 		GenName: "OneOf",
-		GenRandom: func(rnd Rand, size int) RandomValue[T] {
+		GenRandom: func(rnd Rand, size int) OneOfRandom[R] {
 			n := rnd.R().Intn(len(gs))
 			g := gs[n]
-			return RandomValue[T]{
-				Value: OneOfRandom[T]{
-					generator: g,
-					value:     g.Random(rnd, size),
-				},
+			return OneOfRandom[R]{
+				generator: n,
+				value:     g.Random(rnd, size),
 			}
 		},
-		GenEnumerate: func(depth int) geniterable.Iterable[T] {
-			return geniterable.FlatMapBreadthFirst(geniterable.FromSlice(gs),
-				func(g Generator[T]) geniterable.Iterable[T] {
-					return g.Enumerate(depth)
+		GenEnumerate: func(depth int) geniterable.Iterable[OneOfRandom[R]] {
+			return geniterable.FlatMapBreadthFirst(geniterable.Range(0, len(gs)),
+				func(i int) geniterable.Iterable[OneOfRandom[R]] {
+					return geniterable.Map(gs[i].Enumerate(depth), func(a R) OneOfRandom[R] {
+						return OneOfRandom[R]{
+							generator: i,
+							value:     a,
+						}
+					})
 				})
 		},
-		GenShrink: func(elem RandomValue[T]) iterable.Iterable[RandomValue[T]] {
-			r := elem.Value.(OneOfRandom[T])
+		GenShrink: func(elem OneOfRandom[R]) iterable.Iterable[OneOfRandom[R]] {
+			if elem.generator < 0 || elem.generator >= len(gs) {
+				return iterable.Empty[OneOfRandom[R]]()
+			}
+			r := elem
+			g := gs[elem.generator]
 			return iterable.Map(
-				r.generator.Shrink(r.value),
-				func(v RandomValue[T]) RandomValue[T] {
-					return RandomValue[T]{
-						Value: OneOfRandom[T]{
-							generator: r.generator,
-							value:     v,
-						},
+				g.Shrink(r.value),
+				func(v R) OneOfRandom[R] {
+					return OneOfRandom[R]{
+						generator: r.generator,
+						value:     v,
 					}
 				})
 		},
-		GenSize: func(rv RandomValue[T]) *big.Int {
-			r := rv.Value.(OneOfRandom[T])
-			return r.generator.Size(r.value)
+		GenSize: func(rv OneOfRandom[R]) *big.Int {
+			if rv.generator < 0 || rv.generator >= len(gs) {
+				return big.NewInt(0)
+			}
+			r := rv
+			return gs[r.generator].Size(r.value)
 		},
-		GenRValue: func(rv RandomValue[T]) (T, bool) {
-			r := rv.Value.(OneOfRandom[T])
-			// TODO check if the generator is still valid:
-
-			return r.generator.RValue(r.value)
+		GenRValue: func(rv OneOfRandom[R]) (T, bool) {
+			if rv.generator < 0 || rv.generator >= len(gs) {
+				return zero.Value[T](), false
+			}
+			return gs[rv.generator].RValue(rv.value)
 		},
 	}
 }
 
-type OneOfRandom[T any] struct {
-	generator Generator[T]
-	value     RandomValue[T]
+type OneOfRandom[R any] struct {
+	generator int
+	value     R
 }
 
-func OneConstantOf[T comparable](values ...T) Generator[T] {
+func OneConstantOf[T comparable](values ...T) Generator[T, T] {
 	if len(values) == 0 {
-		return Constant(zero.Value[T]())
+		return Empty[T, T]()
 	}
-	return &AnonGenerator[T]{
+	return &AnonGenerator[T, T]{
 		GenName: "OneConstantOf",
-		GenRandom: func(rnd Rand, size int) RandomValue[T] {
+		GenRandom: func(rnd Rand, size int) T {
 			n := rnd.R().Intn(len(values))
 			g := values[n]
-			return RandomValue[T]{
-				Value: g,
-			}
+			return g
 		},
 		GenEnumerate: func(depth int) geniterable.Iterable[T] {
 			return geniterable.TakeExhaustive(depth, geniterable.FromSlice(values))
 		},
-		GenShrink: func(elem RandomValue[T]) iterable.Iterable[RandomValue[T]] {
-			v := elem.Get()
+		GenShrink: func(elem T) iterable.Iterable[T] {
+			v := elem
 			i := slice.IndexOf(v, values, equality.Default[T]())
 			if i >= len(values) {
 				i = len(values) - 1
 			}
 			if i <= 0 {
-				return iterable.Empty[RandomValue[T]]()
+				return iterable.Empty[T]()
 			}
-			return iterable.Singleton(R(values[i]))
+			return iterable.Singleton(values[i])
 		},
-		GenSize: func(rv RandomValue[T]) *big.Int {
-			v := rv.Get()
+		GenSize: func(rv T) *big.Int {
+			v := rv
 			i := slice.IndexOf(v, values, equality.Default[T]())
 			return big.NewInt(int64(i))
 		},
-		GenRValue: func(rv RandomValue[T]) (T, bool) {
-			v := rv.Get()
+		GenRValue: func(rv T) (T, bool) {
+			v := rv
 			if !slice.Contains(values, v) {
 				if len(values) > 0 {
 					// fall back to first option
@@ -110,6 +116,6 @@ func OneConstantOf[T comparable](values ...T) Generator[T] {
 }
 
 // Bool returns a generator for Boolean values.
-func Bool() Generator[bool] {
+func Bool() Generator[bool, bool] {
 	return OneConstantOf(false, true)
 }

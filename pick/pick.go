@@ -8,9 +8,9 @@ import (
 	"github.com/peterzeller/go-stateful-test/statefulTest"
 )
 
-func Val[V any](t statefulTest.T, g generator.Generator[V]) V {
+func Val[V, R any](t statefulTest.T, g generator.Generator[V, R]) V {
 	v := t.PickValue(generator.ToUntyped(g))
-	return v.(V)
+	return v.Value.(V)
 }
 
 type Cases map[string]func()

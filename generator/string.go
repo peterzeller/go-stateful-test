@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func String(chars ...rune) Generator[string] {
+func String(chars ...rune) Generator[string, string] {
 	if len(chars) == 0 {
 		chars = []rune{'a', 'b'}
 	}
@@ -28,14 +28,14 @@ func (g genString) Name() string {
 	return "genString"
 }
 
-func (g genString) Random(rnd Rand, size int) RandomValue[string] {
+func (g genString) Random(rnd Rand, size int) string {
 	r := rnd.R()
 	length := r.Intn(size + 1)
 	var s strings.Builder
 	for i := 0; i < length; i++ {
 		s.WriteRune(g.chars[r.Intn(len(g.chars))])
 	}
-	return R(s.String())
+	return (s.String())
 }
 
 func (g genString) Enumerate(depth int) geniterable.Iterable[string] {
@@ -64,15 +64,15 @@ func enumerateStrings(length int, chars []rune) geniterable.Iterable[string] {
 	}
 }
 
-func (g genString) Shrink(elem RandomValue[string]) iterable.Iterable[RandomValue[string]] {
-	runes := linked.FromIterable(iterable.FromString(elem.Get()))
+func (g genString) Shrink(elem string) iterable.Iterable[string] {
+	runes := linked.FromIterable(iterable.FromString(elem))
 	return iterable.Map(shrink.ShrinkList(runes, g.shrinkRune),
-		func(runes *linked.List[rune]) RandomValue[string] {
+		func(runes *linked.List[rune]) string {
 			var s strings.Builder
 			for it := iterable.Start[rune](runes); it.HasNext(); it.Next() {
 				s.WriteRune(it.Current())
 			}
-			return R(s.String())
+			return (s.String())
 		})
 }
 
@@ -91,9 +91,9 @@ func (g genString) shrinkRune(r rune) iterable.Iterable[rune] {
 
 }
 
-func (g genString) Size(t RandomValue[string]) *big.Int {
+func (g genString) Size(t string) *big.Int {
 	var sum big.Int
-	for _, r := range t.Get() {
+	for _, r := range t {
 		index := slice.IndexOf(r, g.chars, equality.Default[rune]())
 		if index < 0 {
 			index = len(g.chars)
@@ -103,6 +103,7 @@ func (g genString) Size(t RandomValue[string]) *big.Int {
 	return &sum
 }
 
-func (g genString) RValue(elem RandomValue[string]) (string, bool) {
-	return elem.Get(), true
+func (g genString) RValue(elem string) (string, bool) {
+	// TODO check that chars match
+	return elem, true
 }

@@ -7,9 +7,9 @@ import (
 )
 
 // Dict is a generator for immutable dictionaries.
-func Dict[K, V any](keyGen Generator[K], valueGen Generator[V], h hash.EqHash[K]) Generator[hashdict.Dict[K, V]] {
+func Dict[K, RK, V, RV any](keyGen Generator[K, RK], valueGen Generator[V, RV], h hash.EqHash[K]) Generator[hashdict.Dict[K, V], flatmapRv[[]RK, interface{}]] {
 	keys := SliceDistinct[K](keyGen, h)
-	return FlatMap(keys, func(keys []K) Generator[hashdict.Dict[K, V]] {
+	return FlatMap(keys, func(keys []K) Generator[hashdict.Dict[K, V], interface{}] {
 		values := SliceFixedLength(valueGen, len(keys))
 		return Map(values, func(values []V) hashdict.Dict[K, V] {
 			m := hashdict.New[K, V](h)
@@ -22,9 +22,9 @@ func Dict[K, V any](keyGen Generator[K], valueGen Generator[V], h hash.EqHash[K]
 }
 
 // DictMut is a generator for mutable dictionaries (maps).
-func DictMut[K comparable, V any](keyGen Generator[K], valueGen Generator[V]) Generator[map[K]V] {
+func DictMut[K comparable, RK, V, RV any](keyGen Generator[K, RK], valueGen Generator[V, RV]) Generator[map[K]V, flatmapRv[[]RK, interface{}]] {
 	keys := SliceDistinct(keyGen, equality.Default[K]())
-	return FlatMap(keys, func(keys []K) Generator[map[K]V] {
+	return FlatMap(keys, func(keys []K) Generator[map[K]V, interface{}] {
 		values := SliceFixedLength(valueGen, len(keys))
 		return Map(values, func(values []V) map[K]V {
 			m := make(map[K]V)

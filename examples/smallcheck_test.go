@@ -25,7 +25,7 @@ func TestSmallCheckNonDet(t *testing.T) {
 			x = pick.Val(t, generator.IntRange(0, 10))
 		} else {
 			x = pick.Val(t, generator.IntRange(11, 15))
-			// require.Less(t, 10, x)
+			require.Less(t, 10, x)
 		}
 		t.Logf("run %d: x = %d", run, x)
 	})

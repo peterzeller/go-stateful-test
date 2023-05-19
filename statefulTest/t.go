@@ -10,7 +10,7 @@ type T interface {
 	FailNow()
 	Logf(format string, args ...any)
 	// PickValue returns the next value
-	PickValue(untyped generator.UntypedGenerator) interface{}
+	PickValue(untyped generator.UntypedGenerator) generator.UV
 	// HasMore is used for generating a sequence of values
 	HasMore() bool
 	// Cleanup runs a function when the test is done

@@ -53,50 +53,50 @@ type forkGenerator struct {
 	name   string
 }
 
-var _ generator.Generator[*fork] = &forkGenerator{}
+var _ generator.Generator[*fork, *fork] = &forkGenerator{}
 
 func (f forkGenerator) Name() string {
 	return f.name
 }
 
-func (f forkGenerator) Random(rnd generator.Rand, size int) generator.RandomValue[*fork] {
+func (f forkGenerator) Random(rnd generator.Rand, size int) *fork {
 	seed := rnd.R().Int63()
-	return generator.R(&fork{
+	return &fork{
 		parent:     f.origin.parent,
 		genTree:    tree.NewGenNode(seed),
 		presetTree: nil,
 		maxSize:    size,
-	})
+	}
 }
 
-func (f forkGenerator) Size(elem generator.RandomValue[*fork]) *big.Int {
-	return elem.Get().Size()
+func (f forkGenerator) Size(elem *fork) *big.Int {
+	return elem.Size()
 }
 
 func (f forkGenerator) Enumerate(depth int) geniterable.Iterable[*fork] {
 	panic("enumerate is not implemented for quickcheck")
 }
 
-func (f forkGenerator) Shrink(elem generator.RandomValue[*fork]) iterable.Iterable[generator.RandomValue[*fork]] {
-	shrinks := shrinkTree(elem.Get().presetTree)
+func (f forkGenerator) Shrink(elem *fork) iterable.Iterable[*fork] {
+	shrinks := shrinkTree(elem.presetTree)
 	return iterable.Map(shrinks,
-		func(t *tree.GenNode) generator.RandomValue[*fork] {
-			return generator.R(&fork{
+		func(t *tree.GenNode) *fork {
+			return &fork{
 				parent:     f.origin.parent,
 				genTree:    tree.NewGenNode(0),
 				presetTree: t,
 				maxSize:    0,
-			})
+			}
 		})
 }
 
-func (f forkGenerator) RValue(rv generator.RandomValue[*fork]) (*fork, bool) {
-	return rv.Get(), true
+func (f forkGenerator) RValue(rv *fork) (*fork, bool) {
+	return rv, true
 }
 
 func (f *fork) Fork(name string) generator.Rand {
-	gen := generator.ToUntyped[*fork](forkGenerator{name: name, origin: f})
-	child := f.PickValue(gen).(*fork)
+	gen := generator.ToUntyped[*fork, *fork](forkGenerator{name: name, origin: f})
+	child := f.PickValue(gen).Value.(*fork)
 	return child
 }
 
@@ -104,7 +104,7 @@ func (f *fork) R() *rand.Rand {
 	return f.genTree.Rand
 }
 
-func (f *fork) PickValue(gen generator.UntypedGenerator) interface{} {
+func (f *fork) PickValue(gen generator.UntypedGenerator) generator.UV {
 	// check if we have a preset value in the presetTree
 	genName := gen.Name()
 	var picked tree.GeneratedValue
@@ -169,7 +169,7 @@ func (f *fork) Size() *big.Int {
 	return f.genTree.Size()
 }
 
-func (s *state) PickValue(gen generator.UntypedGenerator) interface{} {
+func (s *state) PickValue(gen generator.UntypedGenerator) generator.UV {
 	return s.mainFork.PickValue(gen)
 }
 

@@ -67,13 +67,13 @@ func (r *ReflectionGeneratorOptions) generatorFromConstructor(constructorFun int
 	}
 
 	// create generator for arguments
-	gens := make([]Generator[reflect.Value], t.NumIn())
+	gens := make([]Generator[reflect.Value, interface{}], t.NumIn())
 	for i := 0; i < t.NumIn(); i++ {
 		g, err := buildGenerator(r, t.In(i))
 		if err != nil {
 			return nil, fmt.Errorf("cannot create generator for parameter %d: %w", i, err)
 		}
-		gens[i] = Map(ToTypedGenerator[interface{}](g),
+		gens[i] = Map(ToTypedGenerator[interface{}, interface{}](g),
 			func(v interface{}) reflect.Value {
 				return reflect.ValueOf(v)
 			})
@@ -86,9 +86,9 @@ func (r *ReflectionGeneratorOptions) generatorFromConstructor(constructorFun int
 		return values
 	})
 	for i := 1; i < len(gens); i++ {
-		g = Zip(g, gens[i], func(ar []reflect.Value, v reflect.Value) []reflect.Value {
+		g = UntypedR(Zip(g, gens[i], func(ar []reflect.Value, v reflect.Value) []reflect.Value {
 			return append(ar, v)
-		})
+		}))
 	}
 	cg := FilterMap(g,
 		func(args []reflect.Value) (interface{}, bool) {
@@ -113,13 +113,13 @@ func ReflectionGenDefaultOpts() *ReflectionGeneratorOptions {
 
 // ReflectionGen uses reflection to return a generator for the generic type T.
 // To support custom types, pass in ReflectionGeneratorOptions with registered generators for those types.
-func ReflectionGen[T any](opts *ReflectionGeneratorOptions) Generator[T] {
+func ReflectionGen[T any](opts *ReflectionGeneratorOptions) Generator[T, interface{}] {
 	typ := reflect.TypeOf(zero.Value[T]())
 	gen, err := buildGenerator(opts, typ)
 	if err != nil {
 		panic(err)
 	}
-	return ToTypedGenerator[T](gen)
+	return ToTypedGenerator[T, interface{}](gen)
 }
 
 func buildGenerator(opts *ReflectionGeneratorOptions, typ reflect.Type) (UntypedGenerator, error) {
@@ -206,7 +206,7 @@ func sliceGenerator(t reflect.Type, opts *ReflectionGeneratorOptions) (UntypedGe
 	if err != nil {
 		return nil, fmt.Errorf("generating element generator for %v slice: %w", elemType, err)
 	}
-	sliceGen := Map(Slice(ToTypedGenerator[interface{}](elemGen)),
+	sliceGen := Map(Slice(ToTypedGenerator[interface{}, interface{}](elemGen)),
 		func(ar []interface{}) interface{} {
 			r := reflect.MakeSlice(t, len(ar), len(ar))
 			for i, v := range ar {
@@ -232,15 +232,15 @@ func structGenerator(t reflect.Type, opts *ReflectionGeneratorOptions) (UntypedG
 		}
 		fieldGens[i] = g
 	}
-	g := Map(ToTypedGenerator[interface{}](fieldGens[0]), func(value interface{}) []interface{} {
+	g := Map(ToTypedGenerator[interface{}, interface{}](fieldGens[0]), func(value interface{}) []interface{} {
 		values := make([]interface{}, 1, len(fields))
 		values[0] = value
 		return values
 	})
 	for i := 1; i < len(fieldGens); i++ {
-		g = Zip(g, ToTypedGenerator[interface{}](fieldGens[i]), func(ar []interface{}, v interface{}) []interface{} {
+		g = UntypedR(Zip(g, ToTypedGenerator[interface{}, interface{}](fieldGens[i]), func(ar []interface{}, v interface{}) []interface{} {
 			return append(ar, v)
-		})
+		}))
 	}
 	sGen := Map(g, func(fieldValues []interface{}) interface{} {
 		val := reflect.New(t).Elem()

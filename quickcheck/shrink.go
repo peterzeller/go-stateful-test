@@ -2,10 +2,10 @@ package quickcheck
 
 import (
 	"context"
+	"github.com/peterzeller/go-stateful-test/generator"
 
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/list/linked"
-	"github.com/peterzeller/go-stateful-test/generator"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
 	"github.com/peterzeller/go-stateful-test/quickcheck/tree"
 )
@@ -62,7 +62,7 @@ func shrinkGeneratedValues(values *linked.List[tree.GeneratedValue]) iterable.It
 	return shrink.ListShrinkOne(values, func(gv tree.GeneratedValue) iterable.Iterable[tree.GeneratedValue] {
 		shrinks := gv.Generator.Shrink(gv.Value)
 		return iterable.Map(shrinks,
-			func(v generator.RandomValue[interface{}]) tree.GeneratedValue {
+			func(v generator.UR) tree.GeneratedValue {
 				return tree.GeneratedValue{
 					Generator: gv.Generator,
 					Value:     v,

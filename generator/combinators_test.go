@@ -9,7 +9,7 @@ import (
 // This example shows how to use the Map function to create a generator for big.Int from a generator for int.
 func ExampleMap() {
 	// Create a generator for ints
-	intGen := Generator[int](IntRange(0, 10))
+	intGen := IntRange(0, 10)
 
 	// Create a generator for big.Ints
 	bigIntGen := Map(intGen, func(i int) *big.Int {
@@ -17,7 +17,7 @@ func ExampleMap() {
 	})
 
 	// enumerate some values:
-	vals := geniterable.ToSlice(bigIntGen.Enumerate(10))
+	vals := geniterable.ToSlice(EnumerateValues(bigIntGen, 10))
 	fmt.Printf("vals = %+v\n", vals)
 
 	// Output: vals = [+0 +1 +2 +3 +4 +5 +6 +7 +8 +9]
@@ -33,12 +33,12 @@ type pair struct {
 // The integer 'n' is a number between 1 and 3, the second value 's' is a string consisting of the first 'n' letters of the alphabet.
 func ExampleFlatMap() {
 	// Create a generator for ints
-	nGen := Generator[int](IntRange(1, 3))
+	nGen := IntRange(1, 3)
 
 	alphabet := []rune{'a', 'b', 'c'}
 
 	// Create a generator for pairs
-	pairGen := FlatMap(nGen, func(n int) Generator[pair] {
+	pairGen := FlatMap(nGen, func(n int) Generator[pair, string] {
 		sGen := String(alphabet[:n]...)
 		return Map(sGen, func(s string) pair {
 			return pair{n: n, s: s}
@@ -46,7 +46,7 @@ func ExampleFlatMap() {
 	})
 
 	// enumerate some values:
-	vals := geniterable.ToSlice(pairGen.Enumerate(3))
+	vals := geniterable.ToSlice(EnumerateValues(pairGen, 3))
 	for _, v := range vals {
 		fmt.Printf("(%d, %#v)\n", v.n, v.s)
 	}
@@ -116,7 +116,7 @@ func ExampleFlatMap() {
 // The integer 'n' is a number between 1 and 3, the second value 's' is a string consisting of the letters 'a' and 'b'.
 func ExampleZip() {
 	// Create a generator for ints
-	nGen := Generator[int](IntRange(1, 3))
+	nGen := IntRange(1, 3)
 
 	// Create a generator for strings
 	sGen := String('a', 'b')
@@ -127,7 +127,7 @@ func ExampleZip() {
 	})
 
 	// enumerate some values:
-	vals := geniterable.ToSlice(pairGen.Enumerate(3))
+	vals := geniterable.ToSlice(EnumerateValues(pairGen, 3))
 	for _, v := range vals {
 		fmt.Printf("(%d, %#v)\n", v.n, v.s)
 	}
@@ -182,7 +182,7 @@ func ExampleZip() {
 // yields even numbers.
 func ExampleFilter() {
 	// Create a generator for ints
-	intGen := Generator[int](IntRange(0, 10))
+	intGen := IntRange(0, 10)
 
 	// Create a generator for even numbers
 	evenGen := Filter(intGen, func(i int) bool {

@@ -7,7 +7,7 @@ import (
 )
 
 // Constant generator that always returns the same value
-func Constant[T any](c T) Generator[T] {
+func Constant[T any](c T) Generator[T, T] {
 	return constGenerator[T]{
 		c: c,
 	}
@@ -21,22 +21,22 @@ func (c constGenerator[T]) Name() string {
 	return "const"
 }
 
-func (c constGenerator[T]) Random(rnd Rand, size int) RandomValue[T] {
-	return R(c.c)
+func (c constGenerator[T]) Random(rnd Rand, size int) T {
+	return c.c
 }
 
 func (c constGenerator[T]) Enumerate(depth int) geniterable.Iterable[T] {
 	return geniterable.Singleton(c.c)
 }
 
-func (c constGenerator[T]) Shrink(elem RandomValue[T]) iterable.Iterable[RandomValue[T]] {
-	return iterable.Empty[RandomValue[T]]()
+func (c constGenerator[T]) Shrink(elem T) iterable.Iterable[T] {
+	return iterable.Empty[T]()
 }
 
-func (c constGenerator[T]) Size(t RandomValue[T]) *big.Int {
+func (c constGenerator[T]) Size(t T) *big.Int {
 	return big.NewInt(1)
 }
 
-func (c constGenerator[T]) RValue(elem RandomValue[T]) (T, bool) {
+func (c constGenerator[T]) RValue(elem T) (T, bool) {
 	return c.c, true
 }

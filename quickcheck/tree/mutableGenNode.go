@@ -23,7 +23,7 @@ type GeneratedValue struct {
 	// Generator used to generate the value
 	Generator generator.UntypedGenerator
 	// Value that was generated (can be another node)
-	Value generator.RandomValue[interface{}]
+	Value generator.UR
 }
 
 func (v GeneratedValue) Size() *big.Int {
