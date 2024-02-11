@@ -75,8 +75,8 @@ func (rs *rState) advanceStack(depth int) {
 }
 
 type stackEntry struct {
-	current  interface{}
-	iterator geniterable.Iterator[interface{}]
+	current  generator.UR
+	iterator geniterable.Iterator[generator.UR]
 }
 
 // state for a single iteration
@@ -123,14 +123,18 @@ func (s *state) GetLog() string {
 	return s.log.String()
 }
 
-func (s *state) PickValue(gen generator.UntypedGenerator) interface{} {
+func (s *state) PickValue(gen generator.UntypedGenerator) generator.UV {
 	rs := s.parent
 	if s.depth < len(rs.stack) && s.depth <= rs.continueAtDepth {
 		// We already have an iterator.
 		// Return the current value and move to the next.
 		entry := rs.stack[s.depth]
 		s.depth++
-		return entry.current
+		value, ok := gen.RValue(entry.current)
+		if !ok {
+			panic(emptyIterator{depth: s.depth})
+		}
+		return value
 	}
 	// We don't have an iterator for this stack level yet
 	it := gen.Enumerate(rs.maxDepth).Iterator()
@@ -150,7 +154,11 @@ func (s *state) PickValue(gen generator.UntypedGenerator) interface{} {
 	}
 
 	s.depth++
-	return current.Value()
+	value, ok := gen.RValue(current.Value())
+	if !ok {
+		panic(emptyIterator{depth: s.depth})
+	}
+	return value
 }
 
 type emptyIterator struct {

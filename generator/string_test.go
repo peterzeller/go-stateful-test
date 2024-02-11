@@ -10,7 +10,7 @@ import (
 
 func TestGenString_Size(t *testing.T) {
 	s := String('a', 'b', 'c')
-	require.Equal(t, int64(3), s.Size(R("abc")).Int64())
+	require.Equal(t, int64(3), s.Size("abc").Int64())
 }
 
 func TestGenString_Shrink(t *testing.T) {

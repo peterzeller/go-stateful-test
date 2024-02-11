@@ -6,35 +6,35 @@ import (
 	"math/big"
 )
 
-type AnonGenerator[T any] struct {
+type AnonGenerator[T, R any] struct {
 	GenName      string
-	GenRandom    func(rnd Rand, size int) RandomValue[T]
-	GenShrink    func(elem RandomValue[T]) iterable.Iterable[RandomValue[T]]
-	GenSize      func(t RandomValue[T]) *big.Int
-	GenRValue    func(r RandomValue[T]) (T, bool)
-	GenEnumerate func(depth int) geniterable.Iterable[T]
+	GenRandom    func(rnd Rand, size int) R
+	GenShrink    func(elem R) iterable.Iterable[R]
+	GenSize      func(t R) *big.Int
+	GenRValue    func(r R) (T, bool)
+	GenEnumerate func(depth int) geniterable.Iterable[R]
 }
 
-func (a *AnonGenerator[T]) Name() string {
+func (a *AnonGenerator[T, R]) Name() string {
 	return a.GenName
 }
 
-func (a *AnonGenerator[T]) Random(rnd Rand, size int) RandomValue[T] {
+func (a *AnonGenerator[T, R]) Random(rnd Rand, size int) R {
 	return a.GenRandom(rnd, size)
 }
 
-func (a *AnonGenerator[T]) Enumerate(depth int) geniterable.Iterable[T] {
+func (a *AnonGenerator[T, R]) Enumerate(depth int) geniterable.Iterable[R] {
 	return a.GenEnumerate(depth)
 }
 
-func (a *AnonGenerator[T]) Shrink(elem RandomValue[T]) iterable.Iterable[RandomValue[T]] {
+func (a *AnonGenerator[T, R]) Shrink(elem R) iterable.Iterable[R] {
 	return a.GenShrink(elem)
 }
 
-func (a *AnonGenerator[T]) Size(t RandomValue[T]) *big.Int {
+func (a *AnonGenerator[T, R]) Size(t R) *big.Int {
 	return a.GenSize(t)
 }
 
-func (a *AnonGenerator[T]) RValue(t RandomValue[T]) (T, bool) {
+func (a *AnonGenerator[T, R]) RValue(t R) (T, bool) {
 	return a.GenRValue(t)
 }

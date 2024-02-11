@@ -22,7 +22,7 @@ func ExampleReflectionGen() {
 	// }
 	genOpts := generator.ReflectionGenDefaultOpts()
 	g := generator.ReflectionGen[Pair](genOpts)
-	for it := geniterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(generator.EnumerateValues(g, 3)); it.HasNext(); it.Next() {
 		fmt.Printf("%+v\n", it.Current())
 	}
 	// Output: {A: B:0}
@@ -80,14 +80,14 @@ type GenericPair[A, B any] struct {
 func TestReflectionGenGenerics(t *testing.T) {
 	genOpts := generator.ReflectionGenDefaultOpts()
 	g := generator.ReflectionGen[GenericPair[string, int]](genOpts)
-	values := geniterable.ToSlice(g.Enumerate(2))
+	values := geniterable.ToSlice(generator.EnumerateValues(g, 2))
 	require.Equal(t, []GenericPair[string, int]{{A: "", B: 0}, {A: "", B: 1}, {A: "a", B: 0}, {A: "a", B: 1}, {A: "b", B: 0}, {A: "b", B: 1}, {A: "aa", B: 0}, {A: "aa", B: 1}, {A: "ab", B: 0}, {A: "ab", B: 1}, {A: "ba", B: 0}, {A: "ba", B: 1}, {A: "bb", B: 0}, {A: "bb", B: 1}}, values)
 }
 
 func TestReflectionGenSlice(t *testing.T) {
 	genOpts := generator.ReflectionGenDefaultOpts()
 	g := generator.ReflectionGen[[]int](genOpts)
-	values := geniterable.ToSlice(g.Enumerate(2))
+	values := geniterable.ToSlice(generator.EnumerateValues(g, 2))
 	require.Equal(t, [][]int([][]int{{}, {0}, {1}, {0, 0}, {1, 0}, {0, 1}, {1, 1}}), values)
 }
 
@@ -98,7 +98,7 @@ func ExampleReflectionGeneratorOptions_RegisterConstructor() {
 		return fmt.Sprintf("(%d, %d)", x, y)
 	})
 	g := generator.ReflectionGen[string](genOpts)
-	for it := geniterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(generator.EnumerateValues(g, 3)); it.HasNext(); it.Next() {
 		fmt.Printf("%s\n", it.Current())
 	}
 	// Output: (0, 0)

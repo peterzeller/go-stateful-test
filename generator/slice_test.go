@@ -12,7 +12,7 @@ import (
 
 func TestSliceEnumerate(t *testing.T) {
 	g := Slice(IntRange(1, 3))
-	enumerated := geniterable.ToSlice(g.Enumerate(3))
+	enumerated := geniterable.ToSlice(EnumerateValues(g, 3))
 	require.Equal(t, [][]int{
 		{},
 		{1},
@@ -69,8 +69,8 @@ func TestSliceRandom(t *testing.T) {
 
 func TestSliceShrink(t *testing.T) {
 	g := Slice(IntRange(0, 10))
-	rv := sliceRandomValue([]int64{4, 5, 6, 7, 8})
-	shrinks := iterable.ToSlice(iterable.Map(g.Shrink(rv), func(rv RandomValue[[]int]) []int {
+	rv := []int64{4, 5, 6, 7, 8}
+	shrinks := iterable.ToSlice(iterable.Map(g.Shrink(rv), func(rv []int64) []int {
 		v, ok := g.RValue(rv)
 		require.True(t, ok)
 		return v
@@ -101,21 +101,9 @@ func TestSliceShrink(t *testing.T) {
 		shrinks)
 }
 
-func sliceRandomValue(elem []int64) RandomValue[[]int] {
-	rvs := make([]RandomValue[int], len(elem))
-	for i, e := range elem {
-		rvs[i] = RandomValue[int]{
-			Value: e,
-		}
-	}
-	return RandomValue[[]int]{
-		Value: rvs,
-	}
-}
-
 func ExampleSliceFixedLength() {
 	g := SliceFixedLength(IntRange(1, 3), 3)
-	for it := geniterable.Start(g.Enumerate(100)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(EnumerateValues(g, 100)); it.HasNext(); it.Next() {
 		fmt.Printf("%+v\n", it.Current())
 	}
 	// Output: [1 1 1]

@@ -9,7 +9,7 @@ import (
 
 func ExampleDict() {
 	g := Dict(IntRange(1, 2), IntRange(3, 4), hash.Num[int]())
-	for it := geniterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(EnumerateValues(g, 3)); it.HasNext(); it.Next() {
 		fmt.Println(it.Current())
 	}
 	// Output: []
@@ -29,7 +29,7 @@ func ExampleDict() {
 
 func ExampleDictMut() {
 	g := DictMut(IntRange(1, 2), IntRange(3, 4))
-	for it := geniterable.Start(g.Enumerate(3)); it.HasNext(); it.Next() {
+	for it := geniterable.Start(EnumerateValues(g, 3)); it.HasNext(); it.Next() {
 		fmt.Println(it.Current())
 	}
 	// Output: map[]
