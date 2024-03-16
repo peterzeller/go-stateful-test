@@ -14,8 +14,8 @@ import (
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-fun/zero"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math/big"
-	"math/rand"
 )
 
 // Generator is an interface for generating values of type T with internal value representation R.
@@ -122,7 +122,9 @@ type Rand interface {
 	// HasMore to generate sequences of elements and if there are more elements
 	HasMore() bool
 	// R is the underlying random number generator
-	R() *rand.Rand
+	R() randomsource.RandomStream
+	// UseHeuristics is true when the search should use heuristics to find elements. For example try small numbers first.
+	UseHeuristics() bool
 }
 
 func ShrinkValues[T any](gen Generator[T, T], v T) iterable.Iterable[T] {

@@ -3,6 +3,7 @@ package generator
 import (
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math"
 	"math/big"
 )
@@ -31,8 +32,15 @@ func (g genInt64) Name() string {
 }
 
 func (g genInt64) Random(rnd Rand, size int) int64 {
-	r := rnd.R()
-	p := r.Float64()
+	if !rnd.UseHeuristics() {
+		interval := g.max - g.min
+		bitSize := findMSBPosition(uint64(interval))
+		i := randomsource.Int64B(rnd.R(), 1+(bitSize-1)/8)
+		i = i % interval
+		i = i + g.min
+		return i
+	}
+	p := randomsource.Float64(rnd.R())
 	n := 1 + g.max - g.min
 	switch {
 	// higher probability for 0
@@ -45,7 +53,7 @@ func (g genInt64) Random(rnd Rand, size int) int64 {
 		return (g.max)
 	case p < 0.8 && g.min <= 0 && 0 < g.max:
 		// normal distribution around 0
-		res := int64(math.Abs(r.NormFloat64()) * 3)
+		res := int64(math.Abs(randomsource.NormFloat64(rnd.R())) * 3)
 		if res > g.max {
 			res = g.max
 		}
@@ -53,13 +61,13 @@ func (g genInt64) Random(rnd Rand, size int) int64 {
 	default:
 		if n > 0 {
 			// uniform distribution
-			return (g.min + r.Int63n(n))
+			return g.min + randomsource.Int64N(rnd.R(), n)
 		}
-		if r.Float64() < 0.1 {
+		if randomsource.Float64(rnd.R()) < 0.1 {
 			// negative number
-			return (-1 + r.Int63n(-1+g.min))
+			return -1 + randomsource.Int64N(rnd.R(), -1+g.min)
 		}
-		return (1 + r.Int63n(g.max))
+		return 1 + randomsource.Int64N(rnd.R(), g.max)
 	}
 }
 

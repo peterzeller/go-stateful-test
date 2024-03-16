@@ -50,7 +50,7 @@ func TestStrings(t *testing.T) {
 
 func TestMax3Quick(t *testing.T) {
 	expectError(t, func(t quickcheck.TestingT) {
-		quickcheck.Run(t, quickcheck.Config{}, func(t statefulTest.T) {
+		quickcheck.Run(t, quickcheck.Config{NumberOfRuns: 1000}, func(t statefulTest.T) {
 			x := pick.Val(t, generator.Int())
 			y := pick.Val(t, generator.Int())
 			z := pick.Val(t, generator.Int())

@@ -64,7 +64,7 @@ func TestSliceRandom(t *testing.T) {
 	t.Logf("rv = %+v", rv)
 	v, ok := g.RValue(rv)
 	require.True(t, ok)
-	require.Equal(t, []int{3, 5, 1, 3, 2, 4}, v)
+	require.Equal(t, []int{4, 2, 2, 5, 4, 4, 1, 3, 1}, v)
 }
 
 func TestSliceShrink(t *testing.T) {

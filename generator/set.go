@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math/big"
 
 	"github.com/peterzeller/go-fun/hash"
@@ -63,7 +64,7 @@ func enumerateSets[T any](elems *linked.List[T], h hash.EqHash[T]) geniterable.I
 
 // Random implements Generator
 func (s *setGenerator[T, RT]) Random(rnd Rand, size int) hashset.Set[RT] {
-	n := rnd.R().Intn(size)
+	n := randomsource.IntN(rnd.R(), size)
 	set := hashset.New(s.rvHash())
 	for i := 0; i < n; i++ {
 		set = set.Add(s.gen.Random(rnd, size))

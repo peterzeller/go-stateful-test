@@ -7,6 +7,7 @@ import (
 	"github.com/peterzeller/go-fun/slice"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
 	"github.com/peterzeller/go-stateful-test/generator/shrink"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math/big"
 	"strings"
 )
@@ -29,11 +30,10 @@ func (g genString) Name() string {
 }
 
 func (g genString) Random(rnd Rand, size int) string {
-	r := rnd.R()
-	length := r.Intn(size + 1)
+	length := randomsource.IntN(rnd.R(), size+1)
 	var s strings.Builder
 	for i := 0; i < length; i++ {
-		s.WriteRune(g.chars[r.Intn(len(g.chars))])
+		s.WriteRune(g.chars[randomsource.IntN(rnd.R(), len(g.chars))])
 	}
 	return (s.String())
 }

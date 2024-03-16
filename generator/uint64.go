@@ -3,6 +3,7 @@ package generator
 import (
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math"
 	"math/big"
 )
@@ -30,9 +31,49 @@ func (g genUInt64) Name() string {
 	return "genUInt64"
 }
 
+// findMSBPosition uses a binary search approach to find the position of the most significant bit.
+func findMSBPosition(n uint64) int {
+	if n == 0 {
+		return 0
+	}
+
+	position := 0
+	if n >= 1<<32 {
+		n >>= 32
+		position += 32
+	}
+	if n >= 1<<16 {
+		n >>= 16
+		position += 16
+	}
+	if n >= 1<<8 {
+		n >>= 8
+		position += 8
+	}
+	if n >= 1<<4 {
+		n >>= 4
+		position += 4
+	}
+	if n >= 1<<2 {
+		n >>= 2
+		position += 2
+	}
+	if n >= 1<<1 {
+		position += 1
+	}
+	return position + 1 // Add 1 because positions start at 1.
+}
+
 func (g genUInt64) Random(rnd Rand, size int) uint64 {
-	r := rnd.R()
-	p := r.Float64()
+	if !rnd.UseHeuristics() {
+		interval := g.max - g.min
+		bitSize := findMSBPosition(interval)
+		i := randomsource.Uint64B(rnd.R(), 1+(bitSize-1)/8)
+		i = i % interval
+		i = i + g.min
+		return i
+	}
+	p := randomsource.Float64(rnd.R())
 	n := 1 + g.max - g.min
 	switch {
 	// higher probability for boundary cases
@@ -42,16 +83,16 @@ func (g genUInt64) Random(rnd Rand, size int) uint64 {
 		return (g.max)
 	case p < 0.5:
 		// normal distribution around 0
-		res := uint64(math.Abs(r.NormFloat64()) * 3)
+		res := uint64(math.Abs(randomsource.NormFloat64(rnd.R())) * 3)
 		if res > g.max {
 			res = g.max
 		}
 		return (res)
 	default:
 		if n < math.MaxInt64 {
-			return (g.min + uint64(r.Int63n(int64(n))))
+			return g.min + uint64(randomsource.Int64N(rnd.R(), int64(n)))
 		}
-		v := g.min + (r.Uint64() % n)
+		v := g.min + (randomsource.Uint64(rnd.R()) % n)
 		return (v)
 	}
 }

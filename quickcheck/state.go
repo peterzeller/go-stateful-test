@@ -1,11 +1,12 @@
 package quickcheck
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math/big"
-	"math/rand"
 	"strings"
 
 	"github.com/peterzeller/go-fun/list/linked"
@@ -41,7 +42,12 @@ type fork struct {
 	// Otherwise, we generate a new one.
 	presetTree *tree.GenNode
 	// maxSize is the maximum size to generate when picking random values
-	maxSize int
+	maxSize       int
+	useHeuristics bool
+}
+
+func (f *fork) UseHeuristics() bool {
+	return f.useHeuristics
 }
 
 func (f *fork) String() string {
@@ -60,12 +66,38 @@ func (f forkGenerator) Name() string {
 }
 
 func (f forkGenerator) Random(rnd generator.Rand, size int) *fork {
-	seed := rnd.R().Int63()
+	// get some bytes from the source
+	maxBytes := 10000
+	r := rnd.R()
+	bytesToTake := 1
+	for bytesToTake < maxBytes {
+		i, ok := r.Next()
+		if !ok {
+			break
+		}
+		if i == 0 {
+			break
+		}
+		bytesToTake = 256*bytesToTake + int(i)
+	}
+	// get the bytes
+	var buf bytes.Buffer
+	for i := 0; i < bytesToTake; i++ {
+		b, ok := r.Next()
+		if !ok {
+			break
+		}
+		buf.WriteByte(b)
+	}
+
+	forkedSource := randomsource.RandomSourceFromBytes(buf.Bytes())
+
 	return &fork{
-		parent:     f.origin.parent,
-		genTree:    tree.NewGenNode(seed),
-		presetTree: nil,
-		maxSize:    size,
+		parent:        f.origin.parent,
+		genTree:       tree.NewGenNode(forkedSource),
+		presetTree:    nil,
+		maxSize:       size,
+		useHeuristics: f.origin.useHeuristics,
 	}
 }
 
@@ -82,10 +114,11 @@ func (f forkGenerator) Shrink(elem *fork) iterable.Iterable[*fork] {
 	return iterable.Map(shrinks,
 		func(t *tree.GenNode) *fork {
 			return &fork{
-				parent:     f.origin.parent,
-				genTree:    tree.NewGenNode(0),
-				presetTree: t,
-				maxSize:    0,
+				parent:        f.origin.parent,
+				genTree:       tree.NewGenNode(randomsource.ZeroRandomSource()),
+				presetTree:    t,
+				maxSize:       0,
+				useHeuristics: elem.useHeuristics,
 			}
 		})
 }
@@ -100,7 +133,7 @@ func (f *fork) Fork(name string) generator.Rand {
 	return child
 }
 
-func (f *fork) R() *rand.Rand {
+func (f *fork) R() randomsource.RandomStream {
 	return f.genTree.Rand
 }
 
@@ -154,7 +187,7 @@ func (f *fork) HasMore() bool {
 			f.presetTree = tree.New(old.GeneratedValues().Tail())
 		}
 	} else {
-		if f.genTree.Rand.Float64()*float64(f.maxSize) > 1 {
+		if randomsource.Float64(f.genTree.Rand)*float64(f.maxSize) > 1 {
 			result = true
 		}
 	}
@@ -219,13 +252,14 @@ func (s *state) runCleanups() {
 	s.cleanup = nil
 }
 
-func initState(cfg Config, seed int64) *state {
+func initState(cfg Config, randomSource randomsource.RandomSource) *state {
 	s := &state{
 		mainFork: &fork{
-			parent:     nil,
-			genTree:    tree.NewGenNode(seed),
-			presetTree: nil,
-			maxSize:    100, // TODO init differently
+			parent:        nil,
+			genTree:       tree.NewGenNode(randomSource),
+			presetTree:    nil,
+			maxSize:       100, // TODO init differently
+			useHeuristics: !cfg.DisableHeuristics,
 		},
 		failed: false,
 		log:    strings.Builder{},
