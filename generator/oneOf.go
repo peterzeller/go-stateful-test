@@ -3,6 +3,7 @@ package generator
 import (
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math/big"
 
 	"github.com/peterzeller/go-fun/equality"
@@ -17,7 +18,7 @@ func OneOf[T, R any](gs ...Generator[T, R]) Generator[T, OneOfRandom[R]] {
 	return &AnonGenerator[T, OneOfRandom[R]]{
 		GenName: "OneOf",
 		GenRandom: func(rnd Rand, size int) OneOfRandom[R] {
-			n := rnd.R().Intn(len(gs))
+			n := randomsource.IntN(rnd.R(), len(gs))
 			g := gs[n]
 			return OneOfRandom[R]{
 				generator: n,
@@ -78,7 +79,7 @@ func OneConstantOf[T comparable](values ...T) Generator[T, T] {
 	return &AnonGenerator[T, T]{
 		GenName: "OneConstantOf",
 		GenRandom: func(rnd Rand, size int) T {
-			n := rnd.R().Intn(len(values))
+			n := randomsource.IntN(rnd.R(), len(values))
 			g := values[n]
 			return g
 		},

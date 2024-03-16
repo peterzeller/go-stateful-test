@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/peterzeller/go-fun/iterable"
 	"github.com/peterzeller/go-stateful-test/generator/geniterable"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math/big"
 
 	"github.com/peterzeller/go-fun/equality"
@@ -71,7 +72,7 @@ func (s *sliceGen[T, TR]) Random(rnd Rand, size int) []TR {
 	if size <= 0 {
 		return []TR{}
 	}
-	l := rnd.R().Intn(size)
+	l := randomsource.IntN(rnd.R(), size)
 	res := make([]TR, l)
 	for i := range res {
 		res[i] = s.elemGen.Random(rnd, size-1)
@@ -168,7 +169,7 @@ func (s *sliceDistinctGen[T, TR]) Random(rnd Rand, size int) []TR {
 	if size <= 0 {
 		return []TR{}
 	}
-	l := rnd.R().Intn(size)
+	l := randomsource.IntN(rnd.R(), size)
 	res := make([]TR, 0, l)
 	resValues := make([]T, 0, l)
 	for i := 0; i < l; i++ {

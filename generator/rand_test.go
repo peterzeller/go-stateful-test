@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"math/rand"
 )
 
@@ -15,6 +16,10 @@ type testRand struct {
 	rnd *rand.Rand
 }
 
+func (r *testRand) UseHeuristics() bool {
+	return true
+}
+
 func (r *testRand) Fork(name string) Rand {
 	return r
 }
@@ -23,6 +28,6 @@ func (r *testRand) HasMore() bool {
 }
 
 // R is the underlying random number generator
-func (r *testRand) R() *rand.Rand {
-	return r.rnd
+func (r *testRand) R() randomsource.RandomStream {
+	return randomsource.FromSeed(r.rnd.Int63()).Iterator()
 }

@@ -1,6 +1,7 @@
 package quickcheck
 
 import (
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"testing"
 	"time"
 )
@@ -9,6 +10,8 @@ type Config struct {
 	NumberOfRuns      int
 	MaxShrinkDuration time.Duration
 	PrintAllLogs      bool
+	FixedRandomSource randomsource.RandomSource
+	DisableHeuristics bool
 }
 
 type TestingT interface {

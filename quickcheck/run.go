@@ -3,6 +3,7 @@ package quickcheck
 import (
 	"context"
 	"errors"
+	"github.com/peterzeller/go-stateful-test/quickcheck/randomsource"
 	"runtime/debug"
 	"time"
 
@@ -49,7 +50,13 @@ func Run(t TestingT, cfg Config, f func(t statefulTest.T)) {
 		return nil
 	}
 	var s *state = firstNotNil[state](cfg, func(iteration int) *state {
-		s := initState(cfg, int64(iteration))
+		var rnd randomsource.RandomSource
+		if cfg.FixedRandomSource == nil {
+			rnd = randomsource.FromSeed(int64(iteration))
+		} else {
+			rnd = cfg.FixedRandomSource
+		}
+		s := initState(cfg, rnd)
 		defer s.runCleanups()
 		return runState(s)
 	})
